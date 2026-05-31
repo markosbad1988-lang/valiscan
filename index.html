@@ -883,6 +883,8 @@ function exportPDF() {
   win.document.close();
   showToast('Relatório gerado!');
 }
+
+function exportJSON() {
   if (!products.length) { showToast('Nenhum dado para exportar'); return; }
   downloadFile(JSON.stringify(products, null, 2), 'valiscan_backup_' + dateStr() + '.json', 'application/json');
   showToast('Backup exportado!');
