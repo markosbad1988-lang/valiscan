@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0F6E56">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ValiScan">
+<link rel="manifest" href="manifest.json">
+<title>ValiScan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green-50: #E1F5EE;
+    --green-100: #9FE1CB;
+    --green-200: #5DCAA5;
+    --green-500: #1D9E75;
+    --green-700: #0F6E56;
+    --green-900: #04342C;
+    --amber-50: #FAEEDA;
+    --amber-400: #EF9F27;
+    --amber-700: #854F0B;
+    --red-50: #FCEBEB;
+    --red-400: #E24B4A;
+    --red-700: #A32D2D;
+    --gray-50: #F7F7F5;
+    --gray-100: #EDEDE9;
+    --gray-200: #D3D1C7;
+    --gray-500: #888780;
+    --gray-700: #5F5E5A;
+    --gray-900: #2C2C2A;
+    --bg: #FAFAF8;
+    --surface: #FFFFFF;
+    --text: #1A1A18;
+    --text-muted: #5F5E5A;
+    --border: rgba(0,0,0,0.1);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --font: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); font-family: var(--font); color: var(--text); overscroll-behavior: none; }
+
+  /* ── NAV ── */
+  #app { display: flex; flex-direction: column; height: 100dvh; }
+  #topbar { background: var(--green-700); color: #fff; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  #topbar .logo { font-size: 20px; font-weight: 600; letter-spacing: -0.5px; }
+  #topbar .logo span { opacity: 0.6; font-weight: 400; }
+  #topbar .icon-btn { background: rgba(255,255,255,0.15); border: none; border-radius: 8px; color: #fff; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; }
+
+  #main { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+  #bottomnav { background: var(--surface); border-top: 1px solid var(--border); display: flex; flex-shrink: 0; }
+  #bottomnav button { flex: 1; padding: 10px 0 8px; border: none; background: none; color: var(--text-muted); font-family: var(--font); font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; transition: color 0.15s; }
+  #bottomnav button svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  #bottomnav button.active { color: var(--green-700); font-weight: 500; }
+
+  /* ── VIEWS ── */
+  .view { display: none; flex-direction: column; gap: 12px; }
+  .view.active { display: flex; }
+
+  /* ── SCAN VIEW ── */
+  #scan-area { background: var(--gray-900); border-radius: var(--radius); overflow: hidden; position: relative; min-height: 220px; display: flex; align-items: center; justify-content: center; }
+  #scan-area video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #scan-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+  .scan-frame { width: 200px; height: 80px; position: relative; }
+  .scan-frame::before, .scan-frame::after,
+  .scan-frame > span::before, .scan-frame > span::after {
+    content: ''; position: absolute; width: 20px; height: 20px; border-color: rgba(255,255,255,0.9); border-style: solid;
+  }
+  .scan-frame::before { top: 0; left: 0; border-width: 2px 0 0 2px; }
+  .scan-frame::after { top: 0; right: 0; border-width: 2px 2px 0 0; }
+  .scan-frame > span::before { bottom: 0; left: 0; border-width: 0 0 2px 2px; }
+  .scan-frame > span::after { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
+  .scan-line { position: absolute; left: 4px; right: 4px; height: 2px; background: var(--green-200); opacity: 0.8; animation: scanline 2s ease-in-out infinite; top: 10px; }
+  @keyframes scanline { 0%,100% { top: 10px; opacity: 0.4; } 50% { top: 60px; opacity: 1; } }
+  #scan-hint { color: rgba(255,255,255,0.7); font-size: 13px; margin-top: 14px; }
+
+  /* Manual EAN input */
+  .manual-input-row { display: flex; gap: 8px; }
+  .manual-input-row input { flex: 1; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: var(--mono); font-size: 15px; background: var(--surface); color: var(--text); }
+  .manual-input-row input:focus { outline: 2px solid var(--green-500); border-color: transparent; }
+  .btn { padding: 12px 20px; border-radius: var(--radius-sm); border: none; font-family: var(--font); font-size: 14px; font-weight: 500; cursor: pointer; transition: opacity 0.15s, transform 0.1s; }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--green-700); color: #fff; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-secondary { background: var(--gray-100); color: var(--gray-900); }
+
+  /* Product form card */
+  .card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 16px; }
+  .card-title { font-size: 13px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+  .product-name { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+  .product-ean { font-size: 13px; font-family: var(--mono); color: var(--text-muted); margin-bottom: 16px; }
+  .field-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field.full { grid-column: 1 / -1; }
+  .field label { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+  .field input { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: var(--font); font-size: 15px; background: var(--bg); color: var(--text); }
+  .field input:focus { outline: 2px solid var(--green-500); border-color: transparent; background: var(--surface); }
+  .save-btn { width: 100%; padding: 14px; background: var(--green-700); color: #fff; border: none; border-radius: var(--radius-sm); font-family: var(--font); font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 12px; transition: opacity 0.15s, transform 0.1s; }
+  .save-btn:active { transform: scale(0.98); }
+
+  /* ── DASHBOARD ── */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 14px; }
+  .stat-label { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .stat-value { font-size: 28px; font-weight: 600; line-height: 1; }
+  .stat-card.danger .stat-value { color: var(--red-400); }
+  .stat-card.warning .stat-value { color: var(--amber-400); }
+  .stat-card.ok .stat-value { color: var(--green-500); }
+  .stat-card.total .stat-value { color: var(--text); }
+
+  /* ── LIST VIEW ── */
+  .search-input { width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: var(--font); font-size: 15px; background: var(--surface); color: var(--text); }
+  .search-input:focus { outline: 2px solid var(--green-500); border-color: transparent; }
+  .filter-row { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+  .filter-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); font-family: var(--font); font-size: 13px; cursor: pointer; white-space: nowrap; }
+  .filter-btn.active { background: var(--green-700); color: #fff; border-color: var(--green-700); }
+  .item-list { display: flex; flex-direction: column; gap: 8px; }
+  .item-row { background: var(--surface); border-radius: var(--radius-sm); border: 1px solid var(--border); padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
+  .item-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .item-dot.ok { background: var(--green-500); }
+  .item-dot.warning { background: var(--amber-400); }
+  .item-dot.danger { background: var(--red-400); }
+  .item-dot.expired { background: var(--gray-500); }
+  .item-info { flex: 1; min-width: 0; }
+  .item-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .item-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .item-val { font-size: 13px; font-weight: 500; text-align: right; flex-shrink: 0; }
+  .item-val.danger { color: var(--red-400); }
+  .item-val.warning { color: var(--amber-400); }
+  .item-val.ok { color: var(--green-500); }
+  .item-val.expired { color: var(--gray-500); }
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+  .empty-icon { font-size: 40px; margin-bottom: 10px; }
+
+  /* ── EXPORT VIEW ── */
+  .export-option { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: border-color 0.15s; }
+  .export-option:hover { border-color: var(--green-500); }
+  .export-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .export-icon.csv { background: var(--green-50); }
+  .export-icon.pdf { background: var(--red-50); }
+  .export-text { flex: 1; }
+  .export-title { font-size: 15px; font-weight: 600; }
+  .export-desc { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+  /* ── TOAST ── */
+  #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--gray-900); color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 14px; opacity: 0; transition: opacity 0.25s, transform 0.25s; pointer-events: none; z-index: 999; white-space: nowrap; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── START CAMERA BTN ── */
+  #start-cam-btn { background: var(--green-700); color: #fff; border: none; border-radius: var(--radius-sm); font-family: var(--font); font-size: 15px; font-weight: 500; padding: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  #cam-status { font-size: 13px; color: var(--text-muted); text-align: center; }
+
+  .section-title { font-size: 15px; font-weight: 600; color: var(--text); padding: 4px 0; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- TOP BAR -->
+  <div id="topbar">
+    <div class="logo">Vali<span>Scan</span></div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <div id="user-badge" style="display:none;align-items:center;gap:6px;background:rgba(255,255,255,0.15);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;" onclick="handleLogout()">
+        <img id="user-avatar" src="" width="20" height="20" style="border-radius:50%;">
+        <span id="user-name"></span>
+      </div>
+      <button id="login-btn" class="icon-btn" onclick="handleLogin()" title="Entrar com Google" style="font-size:12px;width:auto;padding:0 10px;gap:5px;display:flex;">
+        ☁️ Entrar
+      </button>
+      <button class="icon-btn" onclick="showInstallPrompt()" title="Instalar app">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 16l-4-4h3V4h2v8h3l-4 4z"/><path d="M20 18H4v2h16v-2z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div id="main">
+
+    <!-- SCAN VIEW -->
+    <div id="view-scan" class="view active">
+      <div id="scan-area">
+        <video id="video" playsinline autoplay muted></video>
+        <div id="scan-overlay">
+          <div class="scan-frame"><span></span><div class="scan-line"></div></div>
+          <div id="scan-hint">Aponte para o código de barras</div>
+        </div>
+      </div>
+      <p id="cam-status"></p>
+      <button id="start-cam-btn" onclick="startCamera()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+        Ativar Câmera
+      </button>
+
+      <div class="manual-input-row">
+        <input type="text" id="ean-input" placeholder="Digite o EAN manualmente..." inputmode="numeric" maxlength="14">
+        <button class="btn btn-secondary" onclick="processEAN(document.getElementById('ean-input').value.trim())">OK</button>
+      </div>
+
+      <!-- Product form (hidden until EAN detected) -->
+      <div id="product-form" class="card" style="display:none;">
+        <div class="card-title">Registrar Produto</div>
+        <div class="product-name" id="pf-name">—</div>
+        <div class="product-ean" id="pf-ean"></div>
+        <div class="field-group">
+          <div class="field full">
+            <label>Nome do Produto</label>
+            <input type="text" id="pf-name-edit" placeholder="Ex: Dipirona 500mg">
+          </div>
+          <div class="field">
+            <label>Validade</label>
+            <input type="month" id="pf-validade">
+          </div>
+          <div class="field">
+            <label>Lote</label>
+            <input type="text" id="pf-lote" placeholder="Ex: A1234">
+          </div>
+          <div class="field">
+            <label>Quantidade</label>
+            <input type="number" id="pf-qty" placeholder="1" min="1" value="1">
+          </div>
+          <div class="field">
+            <label>Local (opcional)</label>
+            <input type="text" id="pf-local" placeholder="Ex: Prateleira 3">
+          </div>
+        </div>
+        <button class="save-btn" onclick="saveProduct()">✓ Salvar Produto</button>
+      </div>
+    </div>
+
+    <!-- DASHBOARD VIEW -->
+    <div id="view-dash" class="view">
+      <div class="section-title">Resumo</div>
+      <div class="stats-grid">
+        <div class="stat-card total"><div class="stat-label">Total</div><div class="stat-value" id="st-total">0</div></div>
+        <div class="stat-card danger"><div class="stat-label">Vencidos</div><div class="stat-value" id="st-exp">0</div></div>
+        <div class="stat-card warning"><div class="stat-label">Até 30 dias</div><div class="stat-value" id="st-30">0</div></div>
+        <div class="stat-card ok"><div class="stat-label">Até 90 dias</div><div class="stat-value" id="st-90">0</div></div>
+      </div>
+      <div class="section-title" style="margin-top:4px">Alertas</div>
+      <div id="alert-list" class="item-list">
+        <div class="empty-state"><div class="empty-icon">✅</div><p>Nenhum alerta</p></div>
+      </div>
+    </div>
+
+    <!-- LIST VIEW -->
+    <div id="view-list" class="view">
+      <input class="search-input" type="search" id="search-input" placeholder="Buscar produto..." oninput="renderList()">
+      <div class="filter-row">
+        <button class="filter-btn active" data-filter="all" onclick="setFilter(this)">Todos</button>
+        <button class="filter-btn" data-filter="expired" onclick="setFilter(this)">Vencidos</button>
+        <button class="filter-btn" data-filter="warning" onclick="setFilter(this)">30 dias</button>
+        <button class="filter-btn" data-filter="ok" onclick="setFilter(this)">OK</button>
+      </div>
+      <div id="item-list" class="item-list"></div>
+    </div>
+
+    <!-- EXPORT VIEW -->
+    <div id="view-export" class="view">
+      <div class="section-title">Exportar Dados</div>
+      <div class="export-option" onclick="exportCSV()">
+        <div class="export-icon csv">📊</div>
+        <div class="export-text">
+          <div class="export-title">Exportar CSV</div>
+          <div class="export-desc">Compatível com Excel e Google Sheets</div>
+        </div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="color:var(--text-muted)"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="export-option" onclick="exportPDF()">
+        <div class="export-icon pdf">📄</div>
+        <div class="export-text">
+          <div class="export-title">Relatório PDF</div>
+          <div class="export-desc">Relatório completo para impressão</div>
+        </div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="color:var(--text-muted)"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="export-option" onclick="exportJSON()">
+        <div class="export-icon" style="background:#EEF2FF">📁</div>
+        <div class="export-text">
+          <div class="export-title">Exportar JSON</div>
+          <div class="export-desc">Backup completo dos dados</div>
+        </div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="color:var(--text-muted)"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="export-option" onclick="triggerImport()">
+        <div class="export-icon" style="background:#FFF7ED">📥</div>
+        <div class="export-text">
+          <div class="export-title">Importar JSON</div>
+          <div class="export-desc">Restaurar backup anterior</div>
+        </div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="color:var(--text-muted)"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(this)">
+
+      <div class="card" style="margin-top:4px">
+        <div class="card-title">Sobre o ValiScan</div>
+        <p style="font-size:13px;color:var(--text-muted);line-height:1.6">
+          Versão 1.0 · PWA · Dados salvos localmente no dispositivo.<br>
+          Funciona offline após instalação.
+        </p>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+
+  <!-- BOTTOM NAV -->
+  <div id="bottomnav">
+    <button class="active" onclick="navigate('scan',this)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><path d="M21 16h-3v3"/><path d="M21 21h-3"/><path d="M16 21v-3"/><line x1="21" y1="11" x2="21" y2="13"/><line x1="12" y1="3" x2="12" y2="5"/><line x1="12" y1="9" x2="12" y2="11"/><line x1="3" y1="12" x2="5" y2="12"/><line x1="9" y1="12" x2="14" y2="12"/></svg>
+      Scan
+    </button>
+    <button onclick="navigate('dash',this)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </button>
+    <button onclick="navigate('list',this)">
+      <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1" fill="currentColor"/><circle cx="3" cy="12" r="1" fill="currentColor"/><circle cx="3" cy="18" r="1" fill="currentColor"/></svg>
+      Produtos
+    </button>
+    <button onclick="navigate('export',this)">
+      <svg viewBox="0 0 24 24"><path d="M12 16l-4-4h3V4h2v8h3l-4 4z"/><path d="M20 18H4v2h16v-2z"/></svg>
+      Exportar
+    </button>
+  </div>
+
+</div><!-- /app -->
+
+<div id="toast"></div>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+  import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyANpGoDwIRLjAHruXFhyVfzgrsQ880GH20",
+    authDomain: "valiscan-b20cd.firebaseapp.com",
+    projectId: "valiscan-b20cd",
+    storageBucket: "valiscan-b20cd.firebasestorage.app",
+    messagingSenderId: "412126721219",
+    appId: "1:412126721219:web:250be11b86ce4a7f239e76",
+    measurementId: "G-V656KHRPWV"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+
+  // Expor globalmente para o código não-module usar
+  window._db = db;
+  window._auth = auth;
+  window._provider = provider;
+  window._collection = collection;
+  window._addDoc = addDoc;
+  window._getDocs = getDocs;
+  window._query = query;
+  window._where = where;
+  window._onSnapshot = onSnapshot;
+  window._signInWithPopup = signInWithPopup;
+  window._signOut = signOut;
+  window._onAuthStateChanged = onAuthStateChanged;
+
+  // Monitorar login
+  onAuthStateChanged(auth, user => {
+    window._currentUser = user;
+    if (typeof window.onAuthChange === 'function') window.onAuthChange(user);
+  });
+</script>
+
+<!-- ZXing fallback (jsDelivr é mais estável que unpkg) -->
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/umd/index.min.js"></script>
+
+<script>
+// ── STATE ──
+let products = JSON.parse(localStorage.getItem('valiscan_products') || '[]');
+let currentEAN = null;
+let activeFilter = 'all';
+let codeReader = null;
+let scanning = false;
+let deferredPrompt = null;
+let videoStream = null;
+let barcodeDetector = null;
+let detectionLoop = null;
+
+// ── NAVIGATION ──
+function navigate(view, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('#bottomnav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  btn.classList.add('active');
+  if (view === 'dash') renderDashboard();
+  if (view === 'list') renderList();
+}
+
+// ── CAMERA & SCAN ──
+async function startCamera() {
+  const btn = document.getElementById('start-cam-btn');
+  const status = document.getElementById('cam-status');
+  const video = document.getElementById('video');
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Iniciando câmera...';
+  status.textContent = '';
+
+  // 1. Pedir acesso à câmera via getUserMedia nativo
+  try {
+    videoStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false
+    });
+    video.srcObject = videoStream;
+    await video.play();
+  } catch (e) {
+    btn.disabled = false;
+    btn.innerHTML = '🔄 Tentar novamente';
+    if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
+      status.innerHTML = '⚠️ <strong>Permissão negada.</strong> Vá em Configurações do navegador → Permissões → Câmera → Permitir este site.';
+    } else if (e.name === 'NotFoundError') {
+      status.textContent = '⚠️ Nenhuma câmera encontrada neste dispositivo.';
+    } else if (location.protocol === 'file:') {
+      status.innerHTML = '⚠️ Arquivo local não suporta câmera. <br>Hospede em um servidor (ex: <code>npx serve .</code>) ou acesse via HTTPS.';
+    } else {
+      status.textContent = '⚠️ Erro: ' + e.message;
+    }
+    console.error('Camera error:', e.name, e.message);
+    return;
+  }
+
+  btn.style.display = 'none';
+  document.getElementById('scan-hint').textContent = 'Aponte para o código de barras';
+
+  // 2. Tentar BarcodeDetector nativo (Chrome 83+, Android)
+  if ('BarcodeDetector' in window) {
+    try {
+      barcodeDetector = new BarcodeDetector({ formats: ['ean_13','ean_8','upc_a','upc_e','code_128','code_39','itf','qr_code'] });
+      startNativeDetection();
+      status.textContent = '📷 Câmera ativa (detecção nativa)';
+      return;
+    } catch(e) { /* fallthrough to ZXing */ }
+  }
+
+  // 3. Fallback: ZXing
+  if (window.ZXing) {
+    try {
+      codeReader = new ZXing.BrowserMultiFormatReader();
+      // Attach stream directly to avoid re-requesting camera
+      video.srcObject = videoStream;
+      codeReader.decodeFromStream(videoStream, video, (result, err) => {
+        if (result && !scanning) {
+          scanning = true;
+          processEAN(result.getText());
+          setTimeout(() => { scanning = false; }, 2000);
+        }
+      });
+      status.textContent = '📷 Câmera ativa (ZXing)';
+      return;
+    } catch(e) { console.error('ZXing error:', e); }
+  }
+
+  // 4. Manual loop com canvas + ZXing decode (último recurso)
+  status.textContent = '📷 Câmera ativa — posicione o código no centro';
+  startCanvasLoop();
+}
+
+function startNativeDetection() {
+  const video = document.getElementById('video');
+  async function detect() {
+    if (!videoStream) return;
+    try {
+      const results = await barcodeDetector.detect(video);
+      if (results.length && !scanning) {
+        scanning = true;
+        processEAN(results[0].rawValue);
+        setTimeout(() => { scanning = false; }, 2000);
+      }
+    } catch(e) {}
+    detectionLoop = requestAnimationFrame(detect);
+  }
+  detect();
+}
+
+function startCanvasLoop() {
+  const video = document.getElementById('video');
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!window.ZXing) return;
+  const reader = new ZXing.BrowserMultiFormatReader();
+
+  async function loop() {
+    if (!videoStream || scanning) { detectionLoop = setTimeout(loop, 400); return; }
+    try {
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      ctx.drawImage(video, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const luminance = new ZXing.RGBLuminanceSource(imageData.data, canvas.width, canvas.height);
+      const binaryBitmap = new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(luminance));
+      const result = reader.decodeBitmap(binaryBitmap);
+      if (result && !scanning) {
+        scanning = true;
+        processEAN(result.getText());
+        setTimeout(() => { scanning = false; }, 2000);
+      }
+    } catch(e) {}
+    detectionLoop = setTimeout(loop, 300);
+  }
+  loop();
+}
+
+// ── EAN PROCESSING ──
+async function processEAN(ean) {
+  if (!ean || ean.length < 8) { showToast('EAN inválido'); return; }
+
+  currentEAN = ean;
+  document.getElementById('pf-ean').textContent = ean;
+
+  // Set default month = current
+  const today = new Date();
+  document.getElementById('pf-validade').value = `${today.getFullYear()}-${String(today.getMonth()+2).padStart(2,'0')}`;
+  document.getElementById('pf-lote').value = '';
+  document.getElementById('pf-qty').value = '1';
+  document.getElementById('pf-local').value = '';
+
+  // 1. Verificar cache local primeiro
+  const known = products.find(p => p.ean === ean);
+  if (known) {
+    setProductName(known.name, 'cache');
+    showForm();
+    return;
+  }
+
+  // 2. Buscar nome online
+  setProductName('🔍 Buscando produto...', 'loading');
+  showForm();
+
+  const name = await fetchProductName(ean);
+  setProductName(name, name === 'Produto não encontrado' ? 'notfound' : 'found');
+  document.getElementById('pf-name-edit').value = name !== 'Produto não encontrado' ? name : '';
+}
+
+function setProductName(text, status) {
+  const el = document.getElementById('pf-name');
+  el.textContent = text;
+  el.style.color = status === 'found' ? 'var(--green-700)' : status === 'loading' ? 'var(--text-muted)' : 'var(--text)';
+  document.getElementById('pf-name-edit').value = (status === 'found') ? text : '';
+}
+
+function showForm() {
+  document.getElementById('product-form').style.display = 'block';
+  document.getElementById('product-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+async function fetchProductName(ean) {
+  // Banco local de medicamentos comuns
+  const localDB = {
+    '7896004401296': 'Dipirona Sódica 500mg',
+    '7896004401302': 'Paracetamol 750mg',
+    '7896181900018': 'Ibuprofeno 600mg',
+    '7896714300022': 'Amoxicilina 500mg',
+    '7896523201917': 'Omeprazol 20mg',
+    '7897695870022': 'Losartana 50mg',
+    '7896714300015': 'Atenolol 25mg',
+  };
+  if (localDB[ean]) return localDB[ean];
+
+  // Tentar Open Food Facts (produtos alimentícios e alguns medicamentos)
+  try {
+    const r = await fetch(`https://world.openfoodfacts.org/api/v0/product/${ean}.json`, { signal: AbortSignal.timeout(4000) });
+    const d = await r.json();
+    if (d.status === 1 && d.product) {
+      const name = d.product.product_name_pt || d.product.product_name || d.product.generic_name;
+      if (name && name.trim()) return capitalize(name.trim());
+    }
+  } catch(e) {}
+
+  // Tentar Open EAN (base global)
+  try {
+    const r = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${ean}`, { signal: AbortSignal.timeout(4000) });
+    const d = await r.json();
+    if (d.items && d.items[0]) {
+      const name = d.items[0].title;
+      if (name) return capitalize(name);
+    }
+  } catch(e) {}
+
+  return 'Produto não encontrado';
+}
+
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
+// ── SAVE PRODUCT ──
+function saveProduct() {
+  const name = document.getElementById('pf-name-edit').value.trim() || 'Produto sem nome';
+  const validade = document.getElementById('pf-validade').value;
+  const lote = document.getElementById('pf-lote').value.trim();
+  const qty = parseInt(document.getElementById('pf-qty').value) || 1;
+  const local = document.getElementById('pf-local').value.trim();
+
+  if (!validade) { showToast('Informe a validade!'); return; }
+
+  const entry = {
+    id: Date.now(),
+    ean: currentEAN,
+    name,
+    validade,
+    lote,
+    qty,
+    local,
+    savedAt: new Date().toISOString()
+  };
+
+  products.push(entry);
+  saveData();
+  saveToCloud(entry);
+
+  document.getElementById('product-form').style.display = 'none';
+  document.getElementById('ean-input').value = '';
+  currentEAN = null;
+  showToast('✓ ' + name + ' salvo!');
+}
+
+// ── STORAGE (local + Firebase) ──
+function saveData() {
+  localStorage.setItem('valiscan_products', JSON.stringify(products));
+}
+
+async function saveToCloud(entry) {
+  if (!window._currentUser || !window._db) return;
+  try {
+    await window._addDoc(window._collection(window._db, 'products'), {
+      ...entry,
+      uid: window._currentUser.uid,
+      syncedAt: new Date().toISOString()
+    });
+  } catch(e) { console.error('Cloud save error:', e); }
+}
+
+async function loadFromCloud() {
+  if (!window._currentUser || !window._db) return;
+  try {
+    showToast('☁️ Sincronizando...');
+    const q = window._query(
+      window._collection(window._db, 'products'),
+      window._where('uid', '==', window._currentUser.uid)
+    );
+    const snap = await window._getDocs(q);
+    const cloudProducts = snap.docs.map(d => ({ ...d.data(), cloudId: d.id }));
+    // Merge: cloud tem prioridade, manter locais que não estão na nuvem
+    const cloudIds = new Set(cloudProducts.map(p => p.id));
+    const localOnly = products.filter(p => !cloudIds.has(p.id));
+    products = [...cloudProducts, ...localOnly];
+    saveData();
+    renderDashboard();
+    renderList();
+    showToast('✅ ' + products.length + ' produtos sincronizados!');
+  } catch(e) {
+    showToast('Erro ao sincronizar');
+    console.error(e);
+  }
+}
+
+// ── AUTH ──
+async function handleLogin() {
+  if (!window._auth) { showToast('Firebase carregando...'); return; }
+  try {
+    await window._signInWithPopup(window._auth, window._provider);
+  } catch(e) { showToast('Erro ao entrar: ' + e.message); }
+}
+
+async function handleLogout() {
+  if (!window._auth) return;
+  await window._signOut(window._auth);
+  showToast('Saiu da conta');
+}
+
+window.onAuthChange = function(user) {
+  const loginBtn = document.getElementById('login-btn');
+  const badge = document.getElementById('user-badge');
+  if (user) {
+    loginBtn.style.display = 'none';
+    badge.style.display = 'flex';
+    document.getElementById('user-avatar').src = user.photoURL || '';
+    document.getElementById('user-name').textContent = user.displayName?.split(' ')[0] || 'Usuário';
+    loadFromCloud();
+  } else {
+    loginBtn.style.display = 'flex';
+    badge.style.display = 'none';
+  }
+};
+
+// ── STATUS HELPER ──
+function getStatus(validade) {
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const exp = new Date(validade + '-01');
+  exp.setMonth(exp.getMonth() + 1);
+  exp.setDate(0); // last day of month
+  const diffDays = Math.ceil((exp - today) / 86400000);
+  if (diffDays < 0) return 'expired';
+  if (diffDays <= 30) return 'danger';
+  if (diffDays <= 90) return 'warning';
+  return 'ok';
+}
+
+function getDaysLabel(validade) {
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const exp = new Date(validade + '-01');
+  exp.setMonth(exp.getMonth() + 1);
+  exp.setDate(0);
+  const d = Math.ceil((exp - today) / 86400000);
+  if (d < 0) return 'Vencido há ' + Math.abs(d) + 'd';
+  if (d === 0) return 'Vence hoje!';
+  return d + ' dias';
+}
+
+function formatValidade(v) {
+  const [y, m] = v.split('-');
+  const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return months[parseInt(m)-1] + '/' + y;
+}
+
+// ── DASHBOARD ──
+function renderDashboard() {
+  const total = products.length;
+  const expired = products.filter(p => getStatus(p.validade) === 'expired').length;
+  const warn30 = products.filter(p => getStatus(p.validade) === 'danger').length;
+  const warn90 = products.filter(p => getStatus(p.validade) === 'warning').length;
+
+  document.getElementById('st-total').textContent = total;
+  document.getElementById('st-exp').textContent = expired;
+  document.getElementById('st-30').textContent = warn30;
+  document.getElementById('st-90').textContent = warn90;
+
+  const alerts = products.filter(p => ['expired','danger','warning'].includes(getStatus(p.validade)));
+  alerts.sort((a,b) => a.validade.localeCompare(b.validade));
+
+  const list = document.getElementById('alert-list');
+  if (!alerts.length) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><p>Nenhum alerta</p></div>';
+    return;
+  }
+  list.innerHTML = alerts.slice(0,20).map(p => {
+    const s = getStatus(p.validade);
+    return `<div class="item-row">
+      <div class="item-dot ${s}"></div>
+      <div class="item-info">
+        <div class="item-name">${p.name}</div>
+        <div class="item-sub">${p.ean}${p.lote ? ' · Lote: '+p.lote : ''}</div>
+      </div>
+      <div class="item-val ${s}">${getDaysLabel(p.validade)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── LIST VIEW ──
+function setFilter(btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeFilter = btn.dataset.filter;
+  renderList();
+}
+
+function renderList() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  let filtered = products.filter(p => {
+    if (q && !p.name.toLowerCase().includes(q) && !p.ean.includes(q)) return false;
+    if (activeFilter === 'all') return true;
+    if (activeFilter === 'expired') return getStatus(p.validade) === 'expired';
+    if (activeFilter === 'warning') return getStatus(p.validade) === 'danger';
+    if (activeFilter === 'ok') return getStatus(p.validade) === 'ok';
+    return true;
+  });
+  filtered.sort((a,b) => a.validade.localeCompare(b.validade));
+
+  const list = document.getElementById('item-list');
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div><p>Nenhum produto encontrado</p></div>';
+    return;
+  }
+  list.innerHTML = filtered.map(p => {
+    const s = getStatus(p.validade);
+    return `<div class="item-row">
+      <div class="item-dot ${s}"></div>
+      <div class="item-info">
+        <div class="item-name">${p.name}</div>
+        <div class="item-sub">EAN ${p.ean}${p.qty > 1 ? ' · Qtd: '+p.qty : ''}${p.local ? ' · '+p.local : ''}</div>
+      </div>
+      <div class="item-val ${s}">${formatValidade(p.validade)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── EXPORT ──
+function exportCSV() {
+  if (!products.length) { showToast('Nenhum produto para exportar'); return; }
+  const headers = ['Nome','EAN','Validade','Lote','Quantidade','Local','Status','Dias'];
+  const rows = products.map(p => {
+    const s = getStatus(p.validade);
+    const status = {expired:'Vencido',danger:'Atenção 30d',warning:'Atenção 90d',ok:'OK'}[s];
+    return [p.name, p.ean, formatValidade(p.validade), p.lote||'', p.qty, p.local||'', status, getDaysLabel(p.validade)];
+  });
+  const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const bom = '\uFEFF';
+  downloadFile(bom + csv, 'valiscan_' + dateStr() + '.csv', 'text/csv;charset=utf-8');
+  showToast('CSV exportado!');
+}
+
+function exportPDF() {
+  if (!products.length) { showToast('Nenhum produto para exportar'); return; }
+
+  const sorted = [...products].sort((a,b) => a.validade.localeCompare(b.validade));
+  const now = new Date().toLocaleDateString('pt-BR');
+  const expired = sorted.filter(p => getStatus(p.validade) === 'expired');
+  const danger  = sorted.filter(p => getStatus(p.validade) === 'danger');
+  const warning = sorted.filter(p => getStatus(p.validade) === 'warning');
+  const ok      = sorted.filter(p => getStatus(p.validade) === 'ok');
+
+  function rows(list, color) {
+    return list.map(p => `
+      <tr>
+        <td>${p.name}</td>
+        <td style="font-family:monospace;font-size:12px">${p.ean}</td>
+        <td>${formatValidade(p.validade)}</td>
+        <td>${p.lote || '—'}</td>
+        <td>${p.qty}</td>
+        <td>${p.local || '—'}</td>
+        <td style="color:${color};font-weight:600">${getDaysLabel(p.validade)}</td>
+      </tr>`).join('');
+  }
+
+  function section(title, list, color, bg) {
+    if (!list.length) return '';
+    return `
+      <h3 style="margin:24px 0 8px;padding:6px 12px;background:${bg};color:${color};border-radius:4px;font-size:13px">${title} (${list.length})</h3>
+      <table>
+        <thead><tr><th>Produto</th><th>EAN</th><th>Validade</th><th>Lote</th><th>Qtd</th><th>Local</th><th>Status</th></tr></thead>
+        <tbody>${rows(list, color)}</tbody>
+      </table>`;
+  }
+
+  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+  <title>ValiScan - Relatório ${now}</title>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 13px; color: #222; padding: 24px; }
+    h1 { color: #0F6E56; margin-bottom: 4px; }
+    .meta { color: #666; font-size: 12px; margin-bottom: 20px; }
+    .stats { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+    .stat { background: #f5f5f5; border-radius: 6px; padding: 10px 16px; min-width: 100px; }
+    .stat-v { font-size: 24px; font-weight: bold; }
+    .stat-l { font-size: 11px; color: #666; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 12px; }
+    th { background: #f0f0f0; padding: 6px 8px; text-align: left; border-bottom: 1px solid #ddd; }
+    td { padding: 5px 8px; border-bottom: 1px solid #eee; }
+    tr:hover td { background: #fafafa; }
+    @media print { body { padding: 0; } }
+  </style></head><body>
+  <h1>ValiScan — Relatório de Validade</h1>
+  <div class="meta">Gerado em ${now} · ${products.length} produto(s) cadastrado(s)</div>
+  <div class="stats">
+    <div class="stat"><div class="stat-v">${products.length}</div><div class="stat-l">Total</div></div>
+    <div class="stat"><div class="stat-v" style="color:#E24B4A">${expired.length}</div><div class="stat-l">Vencidos</div></div>
+    <div class="stat"><div class="stat-v" style="color:#EF9F27">${danger.length}</div><div class="stat-l">Até 30 dias</div></div>
+    <div class="stat"><div class="stat-v" style="color:#EF9F27">${warning.length}</div><div class="stat-l">Até 90 dias</div></div>
+    <div class="stat"><div class="stat-v" style="color:#1D9E75">${ok.length}</div><div class="stat-l">OK</div></div>
+  </div>
+  ${section('🔴 Vencidos', expired, '#A32D2D', '#FCEBEB')}
+  ${section('🟡 Vencendo em até 30 dias', danger, '#854F0B', '#FAEEDA')}
+  ${section('🟠 Vencendo em até 90 dias', warning, '#854F0B', '#FFF7ED')}
+  ${section('🟢 Dentro do prazo', ok, '#0F6E56', '#E1F5EE')}
+  <script>window.print();<\/script>
+  </body></html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  showToast('Relatório gerado!');
+}
+  if (!products.length) { showToast('Nenhum dado para exportar'); return; }
+  downloadFile(JSON.stringify(products, null, 2), 'valiscan_backup_' + dateStr() + '.json', 'application/json');
+  showToast('Backup exportado!');
+}
+
+function triggerImport() { document.getElementById('import-file').click(); }
+
+function importJSON(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) throw new Error();
+      products = [...products, ...data];
+      saveData();
+      showToast(data.length + ' produtos importados!');
+    } catch { showToast('Arquivo inválido'); }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+function downloadFile(content, filename, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function dateStr() {
+  return new Date().toISOString().slice(0,10).replace(/-/g,'');
+}
+
+// ── TOAST ──
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── PWA INSTALL ──
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+});
+
+function showInstallPrompt() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+  } else {
+    showToast('Já instalado ou use o menu do navegador');
+  }
+}
+
+// ── ENTER KEY on EAN input ──
+document.getElementById('ean-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') processEAN(e.target.value.trim());
+});
+
+// ── SERVICE WORKER ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+// Avisar se estiver em file://
+window.addEventListener('load', () => {
+  if (location.protocol === 'file:') {
+    showDeployGuide();
+  }
+});
+
+function showDeployGuide() {
+  // Esconde botão de câmera, mostra guia
+  document.getElementById('start-cam-btn').style.display = 'none';
+  document.getElementById('cam-status').innerHTML = '';
+
+  const guide = document.createElement('div');
+  guide.style.cssText = 'background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:16px;display:flex;flex-direction:column;gap:12px;';
+  guide.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="background:#FAEEDA;border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">⚠️</div>
+      <div>
+        <div style="font-size:14px;font-weight:600;color:var(--text);">Câmera bloqueada em arquivo local</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Chrome bloqueia câmera em <code>file://</code> por segurança</div>
+      </div>
+    </div>
+
+    <div style="font-size:13px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">✅ Solução: abrir via HTTPS</div>
+
+    <div style="border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;">
+      <div style="background:var(--gray-50);padding:10px 14px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border);">Opção 1 — GitHub Pages (gratuito)</div>
+      <div style="padding:12px 14px;font-size:13px;color:var(--text-muted);line-height:1.8;">
+        1. Acesse <a href="https://github.com" style="color:var(--green-700);">github.com</a> → crie conta grátis<br>
+        2. Clique em <strong style="color:var(--text)">+ New repository</strong><br>
+        3. Nome: <code style="background:var(--gray-100);padding:1px 5px;border-radius:4px;">valiscan</code> → Create<br>
+        4. Clique em <strong style="color:var(--text)">uploading an existing file</strong><br>
+        5. Arraste o <code style="background:var(--gray-100);padding:1px 5px;border-radius:4px;">index.html</code> → Commit<br>
+        6. Settings → Pages → Branch: main → Save<br>
+        7. Acesse <code style="background:var(--gray-100);padding:1px 5px;border-radius:4px;">seuuser.github.io/valiscan</code> 🎉
+      </div>
+    </div>
+
+    <div style="border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;">
+      <div style="background:var(--gray-50);padding:10px 14px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border);">Opção 2 — Vercel (mais fácil, 1 minuto)</div>
+      <div style="padding:12px 14px;font-size:13px;color:var(--text-muted);line-height:1.8;">
+        1. Acesse <a href="https://vercel.com/new" style="color:var(--green-700);">vercel.com/new</a><br>
+        2. Clique em <strong style="color:var(--text)">Browse</strong> e selecione a pasta <code style="background:var(--gray-100);padding:1px 5px;border-radius:4px;">valiscan</code><br>
+        3. Clique em Deploy — pronto!<br>
+        4. Link gerado: <code style="background:var(--gray-100);padding:1px 5px;border-radius:4px;">valiscan.vercel.app</code> 🎉
+      </div>
+    </div>
+
+    <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-top:4px;">Enquanto isso, use a entrada manual de EAN abaixo ↓</div>
+  `;
+
+  const scanArea = document.getElementById('scan-area');
+  scanArea.parentNode.insertBefore(guide, scanArea.nextSibling);
+  document.getElementById('scan-area').style.display = 'none';
+}
+</script>
+</body>
+</html>
