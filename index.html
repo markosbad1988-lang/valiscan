@@ -332,9 +332,27 @@
 <div id="toast"></div>
 
 <!-- Firebase SDK -->
+<script>
+// Definir onAuthChange ANTES do módulo Firebase carregar
+window.onAuthChange = function(user) {
+  const loginBtn = document.getElementById('login-btn');
+  const badge = document.getElementById('user-badge');
+  if (user) {
+    loginBtn.style.display = 'none';
+    badge.style.display = 'flex';
+    document.getElementById('user-avatar').src = user.photoURL || '';
+    document.getElementById('user-name').textContent = user.displayName?.split(' ')[0] || 'Usuário';
+    if (typeof loadFromCloud === 'function') loadFromCloud();
+  } else {
+    loginBtn.style.display = 'flex';
+    badge.style.display = 'none';
+  }
+};
+</script>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
   import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
 
   const firebaseConfig = {
@@ -343,8 +361,7 @@
     projectId: "valiscan-b20cd",
     storageBucket: "valiscan-b20cd.firebasestorage.app",
     messagingSenderId: "412126721219",
-    appId: "1:412126721219:web:250be11b86ce4a7f239e76",
-    measurementId: "G-V656KHRPWV"
+    appId: "1:412126721219:web:250be11b86ce4a7f239e76"
   };
 
   const app = initializeApp(firebaseConfig);
@@ -352,7 +369,6 @@
   const auth = getAuth(app);
   const provider = new GoogleAuthProvider();
 
-  // Expor globalmente para o código não-module usar
   window._db = db;
   window._auth = auth;
   window._provider = provider;
@@ -361,15 +377,12 @@
   window._getDocs = getDocs;
   window._query = query;
   window._where = where;
-  window._onSnapshot = onSnapshot;
   window._signInWithPopup = signInWithPopup;
   window._signOut = signOut;
-  window._onAuthStateChanged = onAuthStateChanged;
 
-  // Monitorar login
   onAuthStateChanged(auth, user => {
     window._currentUser = user;
-    if (typeof window.onAuthChange === 'function') window.onAuthChange(user);
+    window.onAuthChange(user);
   });
 </script>
 
@@ -680,20 +693,7 @@ async function handleLogout() {
   showToast('Saiu da conta');
 }
 
-window.onAuthChange = function(user) {
-  const loginBtn = document.getElementById('login-btn');
-  const badge = document.getElementById('user-badge');
-  if (user) {
-    loginBtn.style.display = 'none';
-    badge.style.display = 'flex';
-    document.getElementById('user-avatar').src = user.photoURL || '';
-    document.getElementById('user-name').textContent = user.displayName?.split(' ')[0] || 'Usuário';
-    loadFromCloud();
-  } else {
-    loginBtn.style.display = 'flex';
-    badge.style.display = 'none';
-  }
-};
+// Auth functions já definidas antes do módulo Firebase
 
 // ── STATUS HELPER ──
 function getStatus(validade) {
