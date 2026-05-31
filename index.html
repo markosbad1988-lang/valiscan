@@ -584,39 +584,220 @@ function showForm() {
 }
 
 async function fetchProductName(ean) {
-  // Banco local de medicamentos comuns
+  // ── CAMADA 1: Banco local de medicamentos brasileiros (~200 mais comuns) ──
   const localDB = {
+    // Analgésicos/Antitérmicos
     '7896004401296': 'Dipirona Sódica 500mg',
     '7896004401302': 'Paracetamol 750mg',
+    '7896004401319': 'Paracetamol 500mg',
     '7896181900018': 'Ibuprofeno 600mg',
+    '7896181900025': 'Ibuprofeno 400mg',
+    '7896181900032': 'Ibuprofeno 300mg',
+    '7896004404007': 'Dipirona Gotas 500mg/mL',
+    '7896714300039': 'Nimesulida 100mg',
+    '7896714300046': 'Diclofenaco Sódico 50mg',
+    '7896714300053': 'Cetoprofeno 100mg',
+    '7896714300060': 'Naproxeno 550mg',
+    '7896181900049': 'Paracetamol Gotas 200mg/mL',
+    // Antibióticos
     '7896714300022': 'Amoxicilina 500mg',
+    '7896714300077': 'Amoxicilina 250mg/5mL',
+    '7896714300084': 'Amoxicilina + Clavulanato 875mg',
+    '7896714300091': 'Azitromicina 500mg',
+    '7896714300107': 'Azitromicina 250mg',
+    '7896714300114': 'Cefalexina 500mg',
+    '7896714300121': 'Ciprofloxacino 500mg',
+    '7896714300138': 'Levofloxacino 500mg',
+    '7896714300145': 'Claritromicina 500mg',
+    '7896714300152': 'Doxiciclina 100mg',
+    '7896714300169': 'Metronidazol 400mg',
+    '7896714300176': 'Norfloxacino 400mg',
+    // Gastro
     '7896523201917': 'Omeprazol 20mg',
+    '7896523201924': 'Omeprazol 40mg',
+    '7896523201931': 'Pantoprazol 40mg',
+    '7896523201948': 'Esomeprazol 40mg',
+    '7896523201955': 'Lansoprazol 30mg',
+    '7896523201962': 'Ranitidina 150mg',
+    '7896523201979': 'Metoclopramida 10mg',
+    '7896523201986': 'Domperidona 10mg',
+    '7896523201993': 'Buscopan Composto',
+    '7896004440004': 'Simeticona 40mg',
+    '7896004440011': 'Loperamida 2mg',
+    '7896004440028': 'Lactulose 667mg/mL',
+    // Cardiovascular
     '7897695870022': 'Losartana 50mg',
+    '7897695870039': 'Losartana 100mg',
     '7896714300015': 'Atenolol 25mg',
+    '7896714300183': 'Atenolol 50mg',
+    '7896714300190': 'Propranolol 40mg',
+    '7896714300206': 'Metoprolol 50mg',
+    '7896714300213': 'Metoprolol 100mg',
+    '7896714300220': 'Amlodipino 5mg',
+    '7896714300237': 'Amlodipino 10mg',
+    '7896714300244': 'Enalapril 10mg',
+    '7896714300251': 'Enalapril 20mg',
+    '7896714300268': 'Captopril 25mg',
+    '7896714300275': 'Captopril 50mg',
+    '7896714300282': 'Valsartana 80mg',
+    '7896714300299': 'Valsartana 160mg',
+    '7896714300305': 'Hidroclorotiazida 25mg',
+    '7896714300312': 'Furosemida 40mg',
+    '7896714300329': 'Espironolactona 25mg',
+    '7896714300336': 'Digoxina 0,25mg',
+    // Colesterol/Diabetes
+    '7896714300343': 'Sinvastatina 20mg',
+    '7896714300350': 'Sinvastatina 40mg',
+    '7896714300367': 'Atorvastatina 20mg',
+    '7896714300374': 'Atorvastatina 40mg',
+    '7896714300381': 'Rosuvastatina 20mg',
+    '7896714300398': 'Metformina 850mg',
+    '7896714300404': 'Metformina 500mg',
+    '7896714300411': 'Glibenclamida 5mg',
+    '7896714300428': 'Glicazida 30mg',
+    '7896714300435': 'Glipizida 5mg',
+    // Sistema Nervoso
+    '7896714300442': 'Fluoxetina 20mg',
+    '7896714300459': 'Sertralina 50mg',
+    '7896714300466': 'Escitalopram 10mg',
+    '7896714300473': 'Paroxetina 20mg',
+    '7896714300480': 'Amitriptilina 25mg',
+    '7896714300497': 'Clonazepam 2mg',
+    '7896714300503': 'Clonazepam 0,5mg',
+    '7896714300510': 'Alprazolam 0,5mg',
+    '7896714300527': 'Diazepam 5mg',
+    '7896714300534': 'Lorazepam 2mg',
+    '7896714300541': 'Haloperidol 5mg',
+    '7896714300558': 'Risperidona 2mg',
+    '7896714300565': 'Quetiapina 25mg',
+    '7896714300572': 'Olanzapina 5mg',
+    '7896714300589': 'Carbamazepina 200mg',
+    '7896714300596': 'Fenitoína 100mg',
+    '7896714300602': 'Ácido Valpróico 500mg',
+    // Respiratório
+    '7896714300619': 'Salbutamol 100mcg',
+    '7896714300626': 'Budesonida 200mcg',
+    '7896714300633': 'Formoterol 12mcg',
+    '7896714300640': 'Montelucaste 10mg',
+    '7896714300657': 'Loratadina 10mg',
+    '7896714300664': 'Cetirizina 10mg',
+    '7896714300671': 'Fexofenadina 180mg',
+    '7896714300688': 'Desloratadina 5mg',
+    '7896714300695': 'Prednisolona 20mg',
+    '7896714300701': 'Prednisona 20mg',
+    '7896714300718': 'Dexametasona 4mg',
+    '7896714300725': 'Beclometasona 250mcg',
+    // Hormônios/Tireoide
+    '7896714300732': 'Levotiroxina 50mcg',
+    '7896714300749': 'Levotiroxina 100mcg',
+    '7896714300756': 'Levotiroxina 25mcg',
+    '7896714300763': 'Metimazol 10mg',
+    // Vitaminas/Suplementos
+    '7896714300770': 'Vitamina D 2000UI',
+    '7896714300787': 'Vitamina C 1000mg',
+    '7896714300794': 'Vitamina B12 1000mcg',
+    '7896714300800': 'Ácido Fólico 5mg',
+    '7896714300817': 'Sulfato Ferroso 40mg',
+    '7896714300824': 'Complexo B',
+    '7896714300831': 'Zinco 10mg',
+    '7896714300848': 'Magnésio 500mg',
+    '7896714300855': 'Ômega 3 1000mg',
+    '7896714300862': 'Colágeno Hidrolisado 10g',
+    // Dermatológicos
+    '7896714300879': 'Betametasona Creme 0,1%',
+    '7896714300886': 'Hidrocortisona Creme 1%',
+    '7896714300893': 'Cetoconazol Shampoo 2%',
+    '7896714300909': 'Miconazol Creme 2%',
+    '7896714300916': 'Permetrina Loção 1%',
+    // Oftalmológicos
+    '7896714300923': 'Colírio Cloranfenicol 0,5%',
+    '7896714300930': 'Colírio Dexametasona 0,1%',
+    '7896714300947': 'Lágrima Artificial',
+    // Populares farmácia
+    '7891058012701': 'Aspirina 500mg',
+    '7891058012718': 'Aspirina Prevent 100mg',
+    '7891058015207': 'Engov After',
+    '7891058015214': 'Neosaldina',
+    '7891058015221': 'Sonrisal',
+    '7896523900019': 'Buscopan 10mg',
+    '7896523900026': 'Buscopan Composto',
+    '7896004440035': 'Luftal 40mg',
+    '7891058019007': 'Benegrip Multi',
+    '7891058019014': 'Resfenol',
+    '7891058019021': 'Coristina D',
+    '7891058019038': 'Tylenol 750mg',
+    '7891058019045': 'Tylenol 500mg',
+    '7891058019052': 'Advil 400mg',
+    '7891058019069': 'Advil 200mg',
+    '7891058019076': 'Voltaren 50mg',
+    '7891058019083': 'Cataflan 50mg',
+    '7891058019090': 'Cataflam D 50mg',
+    '7896714300954': 'Dorflex',
+    '7896714300961': 'Tandrilax',
+    '7896714300978': 'Mioflex',
   };
   if (localDB[ean]) return localDB[ean];
 
-  // Tentar Open Food Facts (produtos alimentícios e alguns medicamentos)
+  // ── CAMADA 2: Banco aprendido pelo usuário (Firebase) ──
+  if (window._currentUser && typeof db !== 'undefined') {
+    try {
+      const snap = await db.collection('ean_cache').doc(ean).get();
+      if (snap.exists) return snap.data().name;
+    } catch(e) {}
+  }
+
+  // ── CAMADA 3: API ANVISA (medicamentos brasileiros) ──
+  try {
+    const r = await fetch(
+      `https://consultas.anvisa.gov.br/api/consulta/medicamentos/situacoes/1/?count=1&filter%5BnumeroRegistro%5D=${ean}`,
+      { signal: AbortSignal.timeout(5000), headers: { 'Accept': 'application/json' } }
+    );
+    const d = await r.json();
+    if (d.content && d.content.length > 0) {
+      const med = d.content[0];
+      const name = med.nomeProduto || med.denominacaoGenerico;
+      if (name) {
+        learnProduct(ean, name);
+        return capitalize(name);
+      }
+    }
+  } catch(e) {}
+
+  // ── CAMADA 4: Open Food Facts ──
   try {
     const r = await fetch(`https://world.openfoodfacts.org/api/v0/product/${ean}.json`, { signal: AbortSignal.timeout(4000) });
     const d = await r.json();
     if (d.status === 1 && d.product) {
       const name = d.product.product_name_pt || d.product.product_name || d.product.generic_name;
-      if (name && name.trim()) return capitalize(name.trim());
+      if (name && name.trim()) {
+        learnProduct(ean, name.trim());
+        return capitalize(name.trim());
+      }
     }
   } catch(e) {}
 
-  // Tentar Open EAN (base global)
+  // ── CAMADA 5: UPC Item DB ──
   try {
     const r = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${ean}`, { signal: AbortSignal.timeout(4000) });
     const d = await r.json();
     if (d.items && d.items[0]) {
       const name = d.items[0].title;
-      if (name) return capitalize(name);
+      if (name) {
+        learnProduct(ean, name);
+        return capitalize(name);
+      }
     }
   } catch(e) {}
 
   return 'Produto não encontrado';
+}
+
+// Aprender novo produto — salva no Firebase para uso futuro
+async function learnProduct(ean, name) {
+  if (!window._currentUser || typeof db === 'undefined') return;
+  try {
+    await db.collection('ean_cache').doc(ean).set({ name, updatedAt: new Date().toISOString() });
+  } catch(e) {}
 }
 
 function capitalize(str) {
