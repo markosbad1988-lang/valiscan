@@ -331,10 +331,27 @@
 
 <div id="toast"></div>
 
-<!-- Firebase SDK -->
+<!-- Firebase SDK compat (funciona sem type=module) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script>
-// Definir onAuthChange ANTES do módulo Firebase carregar
-window.onAuthChange = function(user) {
+const firebaseConfig = {
+  apiKey: "AIzaSyANpGoDwIRLjAHruXFhyVfzgrsQ880GH20",
+  authDomain: "valiscan-b20cd.firebaseapp.com",
+  projectId: "valiscan-b20cd",
+  storageBucket: "valiscan-b20cd.firebasestorage.app",
+  messagingSenderId: "412126721219",
+  appId: "1:412126721219:web:250be11b86ce4a7f239e76"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+const provider = new firebase.auth.GoogleAuthProvider();
+
+auth.onAuthStateChanged(user => {
+  window._currentUser = user;
   const loginBtn = document.getElementById('login-btn');
   const badge = document.getElementById('user-badge');
   if (user) {
@@ -342,48 +359,46 @@ window.onAuthChange = function(user) {
     badge.style.display = 'flex';
     document.getElementById('user-avatar').src = user.photoURL || '';
     document.getElementById('user-name').textContent = user.displayName?.split(' ')[0] || 'Usuário';
-    if (typeof loadFromCloud === 'function') loadFromCloud();
+    loadFromCloud();
   } else {
     loginBtn.style.display = 'flex';
     badge.style.display = 'none';
   }
-};
-</script>
+});
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
-  import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+async function handleLogin() {
+  try {
+    await auth.signInWithPopup(provider);
+  } catch(e) { showToast('Erro ao entrar: ' + e.message); }
+}
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyANpGoDwIRLjAHruXFhyVfzgrsQ880GH20",
-    authDomain: "valiscan-b20cd.firebaseapp.com",
-    projectId: "valiscan-b20cd",
-    storageBucket: "valiscan-b20cd.firebasestorage.app",
-    messagingSenderId: "412126721219",
-    appId: "1:412126721219:web:250be11b86ce4a7f239e76"
-  };
+async function handleLogout() {
+  await auth.signOut();
+  showToast('Saiu da conta');
+}
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
-  const provider = new GoogleAuthProvider();
+async function saveToCloud(entry) {
+  if (!window._currentUser) return;
+  try {
+    await db.collection('products').add({ ...entry, uid: window._currentUser.uid, syncedAt: new Date().toISOString() });
+  } catch(e) { console.error('Cloud save:', e); }
+}
 
-  window._db = db;
-  window._auth = auth;
-  window._provider = provider;
-  window._collection = collection;
-  window._addDoc = addDoc;
-  window._getDocs = getDocs;
-  window._query = query;
-  window._where = where;
-  window._signInWithPopup = signInWithPopup;
-  window._signOut = signOut;
-
-  onAuthStateChanged(auth, user => {
-    window._currentUser = user;
-    window.onAuthChange(user);
-  });
+async function loadFromCloud() {
+  if (!window._currentUser) return;
+  try {
+    showToast('☁️ Sincronizando...');
+    const snap = await db.collection('products').where('uid', '==', window._currentUser.uid).get();
+    const cloudProducts = snap.docs.map(d => ({ ...d.data(), cloudId: d.id }));
+    const cloudIds = new Set(cloudProducts.map(p => p.id));
+    const localOnly = products.filter(p => !cloudIds.has(p.id));
+    products = [...cloudProducts, ...localOnly];
+    saveData();
+    renderDashboard();
+    renderList();
+    showToast('✅ ' + products.length + ' produtos sincronizados!');
+  } catch(e) { showToast('Erro ao sincronizar'); console.error(e); }
+}
 </script>
 
 <!-- ZXing fallback (jsDelivr é mais estável que unpkg) -->
@@ -679,21 +694,7 @@ async function loadFromCloud() {
   }
 }
 
-// ── AUTH ──
-async function handleLogin() {
-  if (!window._auth) { showToast('Firebase carregando...'); return; }
-  try {
-    await window._signInWithPopup(window._auth, window._provider);
-  } catch(e) { showToast('Erro ao entrar: ' + e.message); }
-}
-
-async function handleLogout() {
-  if (!window._auth) return;
-  await window._signOut(window._auth);
-  showToast('Saiu da conta');
-}
-
-// Auth functions já definidas antes do módulo Firebase
+// Auth functions já definidas no bloco Firebase acima
 
 // ── STATUS HELPER ──
 function getStatus(validade) {
