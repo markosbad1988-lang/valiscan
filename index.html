@@ -654,47 +654,10 @@ function saveProduct() {
   showToast('✓ ' + name + ' salvo!');
 }
 
-// ── STORAGE (local + Firebase) ──
+// ── STORAGE ──
 function saveData() {
   localStorage.setItem('valiscan_products', JSON.stringify(products));
 }
-
-async function saveToCloud(entry) {
-  if (!window._currentUser || !window._db) return;
-  try {
-    await window._addDoc(window._collection(window._db, 'products'), {
-      ...entry,
-      uid: window._currentUser.uid,
-      syncedAt: new Date().toISOString()
-    });
-  } catch(e) { console.error('Cloud save error:', e); }
-}
-
-async function loadFromCloud() {
-  if (!window._currentUser || !window._db) return;
-  try {
-    showToast('☁️ Sincronizando...');
-    const q = window._query(
-      window._collection(window._db, 'products'),
-      window._where('uid', '==', window._currentUser.uid)
-    );
-    const snap = await window._getDocs(q);
-    const cloudProducts = snap.docs.map(d => ({ ...d.data(), cloudId: d.id }));
-    // Merge: cloud tem prioridade, manter locais que não estão na nuvem
-    const cloudIds = new Set(cloudProducts.map(p => p.id));
-    const localOnly = products.filter(p => !cloudIds.has(p.id));
-    products = [...cloudProducts, ...localOnly];
-    saveData();
-    renderDashboard();
-    renderList();
-    showToast('✅ ' + products.length + ' produtos sincronizados!');
-  } catch(e) {
-    showToast('Erro ao sincronizar');
-    console.error(e);
-  }
-}
-
-// Auth functions já definidas no bloco Firebase acima
 
 // ── STATUS HELPER ──
 function getStatus(validade) {
