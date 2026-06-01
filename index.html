@@ -961,11 +961,26 @@ function renderList() {
         <div class="item-sub">EAN ${p.ean}${p.qty > 1 ? ' · Qtd: '+p.qty : ''}${p.local ? ' · '+p.local : ''}</div>
       </div>
       <div class="item-val ${s}">${formatValidade(p.validade)}</div>
+      <button onclick="deleteProduct(${p.id})" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--gray-500);font-size:16px;flex-shrink:0;" title="Excluir">🗑️</button>
     </div>`;
   }).join('');
 }
 
 // ── EXPORT ──
+function deleteProduct(id) {
+  const p = products.find(p => p.id === id);
+  if (!p) return;
+  if (!confirm(`Excluir "${p.name}"?`)) return;
+  products = products.filter(p => p.id !== id);
+  saveData();
+  // Remover do Firebase também
+  if (window._currentUser && typeof db !== 'undefined' && p.cloudId) {
+    db.collection('products').doc(p.cloudId).delete().catch(e => console.error(e));
+  }
+  renderList();
+  renderDashboard();
+  showToast('🗑️ ' + p.name + ' excluído');
+}
 function exportCSV() {
   if (!products.length) { showToast('Nenhum produto para exportar'); return; }
   const headers = ['Nome','EAN','Validade','Lote','Quantidade','Local','Status','Dias'];
