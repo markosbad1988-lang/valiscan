@@ -586,9 +586,27 @@ function showForm() {
 async function fetchProductName(ean) {
   // ── CAMADA 1: Banco local de medicamentos brasileiros (~200 mais comuns) ──
   const localDB = {
-    // Analgésicos/Antitérmicos
+    // Buscopan (EANs reais)
+    '7896523900019': 'Buscopan 10mg',
+    '7896523900026': 'Buscopan Composto',
+    '7896523900033': 'Buscopan Gotas',
+    // Tylenol (EANs reais)
+    '7891058019038': 'Tylenol 750mg',
+    '7891058019045': 'Tylenol 500mg',
+    '7891058019052': 'Tylenol DC 500mg',
+    // Dipirona (EANs reais Medley/Sanofi)
     '7896004401296': 'Dipirona Sódica 500mg',
+    '7896004404007': 'Dipirona Gotas 500mg/mL',
+    '7896714300954': 'Dorflex',
+    // Omeprazol
+    '7896523201917': 'Omeprazol 20mg',
+    '7896523201924': 'Omeprazol 40mg',
+    // Ibuprofeno
+    '7896181900018': 'Ibuprofeno 600mg',
+    '7896181900025': 'Ibuprofeno 400mg',
+    // Paracetamol
     '7896004401302': 'Paracetamol 750mg',
+    '7896181900049': 'Paracetamol Gotas 200mg/mL',
     '7896004401319': 'Paracetamol 500mg',
     '7896181900018': 'Ibuprofeno 600mg',
     '7896181900025': 'Ibuprofeno 400mg',
@@ -750,7 +768,7 @@ async function fetchProductName(ean) {
   try {
     const r = await fetch(`https://api.cosmos.bluesoft.com.br/gtins/${ean}`, {
       signal: AbortSignal.timeout(5000),
-      headers: { 'X-Cosmos-Token': 'free', 'Content-Type': 'application/json' }
+      headers: { 'X-Cosmos-Token': 'MRPqsBDkME-TLAr-6sIuhQ', 'Content-Type': 'application/json' }
     });
     if (r.ok) {
       const d = await r.json();
