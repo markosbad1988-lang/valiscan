@@ -1,6 +1,6 @@
 {
-  "name": "ValiScan - Controle de Validade",
-  "short_name": "ValiScan",
+  "name": "ValiFast - Controle de Validade",
+  "short_name": "ValiFast",
   "description": "Controle de validade de produtos por código de barras",
   "start_url": "/",
   "display": "standalone",
@@ -9,7 +9,7 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='24' fill='%230F6E56'/><text y='140' x='30' font-size='120' fill='white'>VS</text></svg>",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='24' fill='%230F6E56'/><text y='140' x='20' font-size='80' fill='white' font-weight='bold'>VF</text></svg>",
       "sizes": "192x192",
       "type": "image/svg+xml"
     }
