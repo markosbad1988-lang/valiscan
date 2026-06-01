@@ -746,24 +746,30 @@ async function fetchProductName(ean) {
     } catch(e) {}
   }
 
-  // ── CAMADA 3: API ANVISA (medicamentos brasileiros) ──
+  // ── CAMADA 3: Cosmos API (base brasileira de produtos por GTIN) ──
   try {
-    const r = await fetch(
-      `https://consultas.anvisa.gov.br/api/consulta/medicamentos/situacoes/1/?count=1&filter%5BnumeroRegistro%5D=${ean}`,
-      { signal: AbortSignal.timeout(5000), headers: { 'Accept': 'application/json' } }
-    );
-    const d = await r.json();
-    if (d.content && d.content.length > 0) {
-      const med = d.content[0];
-      const name = med.nomeProduto || med.denominacaoGenerico;
-      if (name) {
-        learnProduct(ean, name);
-        return capitalize(name);
-      }
+    const r = await fetch(`https://api.cosmos.bluesoft.com.br/gtins/${ean}`, {
+      signal: AbortSignal.timeout(5000),
+      headers: { 'X-Cosmos-Token': 'free', 'Content-Type': 'application/json' }
+    });
+    if (r.ok) {
+      const d = await r.json();
+      const name = d.description || d.commercial_name;
+      if (name) { learnProduct(ean, name); return capitalize(name); }
     }
   } catch(e) {}
 
-  // ── CAMADA 4: Open Food Facts ──
+  // ── CAMADA 4: Produto.xyz (base brasileira gratuita) ──
+  try {
+    const r = await fetch(`https://produto.xyz/v1/gtin/${ean}`, { signal: AbortSignal.timeout(5000) });
+    if (r.ok) {
+      const d = await r.json();
+      const name = d.Product?.name;
+      if (name) { learnProduct(ean, name); return capitalize(name); }
+    }
+  } catch(e) {}
+
+  // ── CAMADA 5: Open Food Facts ──
   try {
     const r = await fetch(`https://world.openfoodfacts.org/api/v0/product/${ean}.json`, { signal: AbortSignal.timeout(4000) });
     const d = await r.json();
