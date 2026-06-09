@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ValiFast">
 <link rel="manifest" href="manifest.json">
-<title>ValiFast BETA SaaS Individual</title>
+<title>ValiFast SaaS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
@@ -155,8 +155,8 @@
 
   .section-title { font-size: 15px; font-weight: 600; color: var(--text); padding: 4px 0; }
 
-  /* ── LOGIN OBRIGATÓRIO / SAAS INDIVIDUAL ── */
-  #login-gate {
+  /* ── AUTH / PLANOS VALIFAST ── */
+  #auth-gate {
     position: fixed;
     inset: 0;
     z-index: 10000;
@@ -164,92 +164,256 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 22px;
+    padding: 18px;
+    overflow-y: auto;
   }
-  #login-gate.hidden { display: none; }
-  .login-card {
+  #auth-gate.hidden { display: none; }
+  .auth-card {
     width: 100%;
-    max-width: 430px;
+    max-width: 460px;
     background: #fff;
     border-radius: 24px;
-    padding: 28px;
+    padding: 24px;
+    box-shadow: 0 28px 80px rgba(0,0,0,0.30);
+  }
+  .auth-logo {
     text-align: center;
-    box-shadow: 0 28px 80px rgba(0,0,0,0.28);
-  }
-  .login-card h1 {
-    color: var(--green-700);
-    font-size: 30px;
-    margin-bottom: 8px;
-  }
-  .login-card p {
-    color: var(--text-muted);
-    font-size: 14px;
-    line-height: 1.45;
     margin-bottom: 18px;
   }
-  .login-btn-main {
-    width: 100%;
-    padding: 14px;
+  .auth-logo h1 {
+    color: var(--green-700);
+    font-size: 34px;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .auth-logo p {
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  .auth-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    background: var(--gray-100);
+    border-radius: 14px;
+    padding: 5px;
+    margin-bottom: 14px;
+  }
+  .auth-tabs button {
     border: none;
-    border-radius: 12px;
-    background: var(--green-700);
-    color: #fff;
+    border-radius: 10px;
+    padding: 10px;
+    background: transparent;
+    color: var(--text-muted);
     font-family: var(--font);
-    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
   }
-  .login-status {
-    margin-top: 12px;
+  .auth-tabs button.active {
+    background: #fff;
+    color: var(--green-700);
+    box-shadow: 0 2px 10px rgba(0,0,0,.08);
+  }
+  .auth-form { display: none; flex-direction: column; gap: 10px; }
+  .auth-form.active { display: flex; }
+  .auth-form input {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-family: var(--font);
+    font-size: 15px;
+    background: var(--bg);
+    color: var(--text);
+  }
+  .auth-form input:focus {
+    outline: 2px solid var(--green-500);
+    border-color: transparent;
+    background: #fff;
+  }
+  .auth-main-btn {
+    width: 100%;
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    background: var(--green-700);
+    color: #fff;
+    font-family: var(--font);
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .auth-link-btn {
+    border: none;
+    background: transparent;
+    color: var(--green-700);
+    font-family: var(--font);
+    font-size: 13px;
+    cursor: pointer;
+    padding: 8px;
+  }
+  .auth-status {
     color: var(--text-muted);
     font-size: 13px;
+    text-align: center;
     white-space: pre-line;
+    min-height: 18px;
   }
-  .beta-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--green-50);
+  .plans-preview {
+    display: grid;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .plan-mini {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 11px 12px;
+    background: var(--bg);
+  }
+  .plan-mini strong {
+    display: block;
     color: var(--green-700);
-    border-radius: 999px;
-    padding: 7px 12px;
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+  .plan-mini span {
+    color: var(--text-muted);
     font-size: 12px;
-    font-weight: 600;
+  }
+  #upgrade-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 11000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,.55);
+    padding: 18px;
+  }
+  #upgrade-modal.show { display: flex; }
+  .upgrade-card {
+    width: 100%;
+    max-width: 460px;
+    background: #fff;
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 28px 80px rgba(0,0,0,0.35);
+  }
+  .upgrade-card h2 {
+    color: var(--green-700);
+    margin-bottom: 8px;
+    font-size: 24px;
+  }
+  .upgrade-card p {
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.45;
     margin-bottom: 14px;
+  }
+  .upgrade-plan {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 13px;
+    margin-top: 8px;
+    background: var(--bg);
+  }
+  .upgrade-plan strong {
+    color: var(--text);
+  }
+  .upgrade-plan span {
+    display: block;
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 3px;
+  }
+  .upgrade-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .plan-badge {
+    font-size: 11px;
+    color: #fff;
+    background: var(--green-700);
+    border-radius: 999px;
+    padding: 5px 9px;
+    margin-left: 8px;
+    white-space: nowrap;
   }
 
 </style>
 </head>
 <body>
-<div id="login-gate">
-  <div class="login-card">
-    <div class="beta-pill">Beta SaaS • acesso individual</div>
-    <h1>ValiFast</h1>
-    <p>
-      Entre com Google para usar o ValiFast.
-      <br><br>
-      Cada usuário terá seus próprios produtos, relatórios e exportações.
-    </p>
-    <button class="login-btn-main" onclick="handleLogin()">Entrar com Google</button>
-    <div id="login-gate-status" class="login-status">Faça login para continuar.</div>
+<div id="auth-gate">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <h1>ValiFast</h1>
+      <p>Controle validade, gere relatórios e evite perdas.</p>
+    </div>
+
+    <div class="auth-tabs">
+      <button id="tab-login" class="active" onclick="showAuthTab('login')">Entrar</button>
+      <button id="tab-register" onclick="showAuthTab('register')">Criar conta</button>
+    </div>
+
+    <div id="login-form" class="auth-form active">
+      <input id="login-email" type="email" placeholder="E-mail">
+      <input id="login-password" type="password" placeholder="Senha">
+      <button class="auth-main-btn" onclick="loginWithEmail()">Entrar</button>
+      <button class="auth-link-btn" onclick="resetPassword()">Esqueci minha senha</button>
+    </div>
+
+    <div id="register-form" class="auth-form">
+      <input id="register-name" type="text" placeholder="Nome">
+      <input id="register-email" type="email" placeholder="E-mail">
+      <input id="register-password" type="password" placeholder="Senha">
+      <input id="register-password2" type="password" placeholder="Confirmar senha">
+      <button class="auth-main-btn" onclick="registerWithEmail()">Criar conta grátis</button>
+    </div>
+
+    <div id="auth-status" class="auth-status">Crie sua conta e teste com até 10 produtos.</div>
+
+    <div class="plans-preview">
+      <div class="plan-mini"><strong>Demonstração</strong><span>Até 10 produtos e relatório básico.</span></div>
+      <div class="plan-mini"><strong>Individual</strong><span>Até 250 produtos.</span></div>
+      <div class="plan-mini"><strong>Profissional</strong><span>Produtos ilimitados.</span></div>
+    </div>
   </div>
 </div>
+
+<div id="upgrade-modal">
+  <div class="upgrade-card">
+    <h2>Limite da demonstração atingido</h2>
+    <p>Você já usou os 10 produtos do plano demonstração. Para continuar usando o ValiFast, escolha um plano.</p>
+    <div class="upgrade-plan"><strong>Individual</strong><span>Até 250 produtos. Ideal para uso próprio e pequenos controles.</span></div>
+    <div class="upgrade-plan"><strong>Profissional</strong><span>Produtos ilimitados. Ideal para farmácias, equipes e uso intenso.</span></div>
+    <div class="upgrade-actions">
+      <button class="btn btn-secondary" onclick="closeUpgradeModal()">Agora não</button>
+      <button class="btn btn-primary" onclick="requestUpgrade()">Quero assinar</button>
+    </div>
+  </div>
+</div>
+
 <div id="app" style="display:none;">
 
   
 <!--
-VALIFAST BETA SAAS INDIVIDUAL - VERSÃO CORRIGIDA
+VALIFAST SAAS - EMAIL/SENHA + PLANOS
 
-Correções aplicadas:
-1. Login obrigatório antes de usar o app.
-2. Produtos não carregam mais do localStorage compartilhado.
-3. Produtos carregam do Firestore filtrando pelo UID:
-   products.where('uid', '==', currentUser.uid)
-4. Ao sair da conta, a lista local é limpa.
-5. Cada usuário vê apenas seus próprios produtos.
+Regras:
+- Sem cadastro/login: não usa o app.
+- Novo cadastro recebe plano demo.
+- Demo: até 10 produtos.
+- Individual: até 250 produtos.
+- Profissional/Admin: ilimitado.
+- Produtos filtrados por UID do usuário logado.
 
-Atenção:
-Para segurança completa, ainda falta configurar regras do Firestore.
+Para liberar plano manualmente no Firebase:
+Firestore > usuarios > {uid}
+plano: "individual" ou "profissional"
+limiteProdutos: 250 ou 999999
 -->
 
   <!-- TOP BAR -->
@@ -442,22 +606,38 @@ const auth = firebase.auth();
 const provider = new firebase.auth.GoogleAuthProvider();
 
 
-function showLoginGate(message) {
-  const gate = document.getElementById('login-gate');
-  const app = document.getElementById('app');
-  const status = document.getElementById('login-gate-status');
+const PLAN_LIMITS = {
+  demo: 10,
+  individual: 250,
+  profissional: Infinity,
+  admin: Infinity
+};
 
+function showAuthGate(message) {
+  const gate = document.getElementById('auth-gate');
+  const app = document.getElementById('app');
+  const status = document.getElementById('auth-status');
   if (gate) gate.classList.remove('hidden');
   if (app) app.style.display = 'none';
   if (status && message) status.textContent = message;
 }
 
-function showValiFastApp() {
-  const gate = document.getElementById('login-gate');
+function showAppAfterLogin() {
+  const gate = document.getElementById('auth-gate');
   const app = document.getElementById('app');
-
   if (gate) gate.classList.add('hidden');
   if (app) app.style.display = 'flex';
+}
+
+function showAuthTab(tab) {
+  document.getElementById('tab-login')?.classList.toggle('active', tab === 'login');
+  document.getElementById('tab-register')?.classList.toggle('active', tab === 'register');
+  document.getElementById('login-form')?.classList.toggle('active', tab === 'login');
+  document.getElementById('register-form')?.classList.toggle('active', tab === 'register');
+  const status = document.getElementById('auth-status');
+  if (status) status.textContent = tab === 'login'
+    ? 'Entre para acessar seus produtos.'
+    : 'Crie sua conta e teste com até 10 produtos.';
 }
 
 function userLocalKey() {
@@ -465,90 +645,249 @@ function userLocalKey() {
   return 'valifast_products_' + window._currentUser.uid;
 }
 
-auth.onAuthStateChanged(user => {
+function currentPlan() {
+  return (window._userProfile && window._userProfile.plano) || 'demo';
+}
+
+function currentLimit() {
+  return PLAN_LIMITS[currentPlan()] ?? 10;
+}
+
+function canAddProduct() {
+  return products.length < currentLimit();
+}
+
+function openUpgradeModal() {
+  document.getElementById('upgrade-modal')?.classList.add('show');
+}
+
+function closeUpgradeModal() {
+  document.getElementById('upgrade-modal')?.classList.remove('show');
+}
+
+function requestUpgrade() {
+  const email = encodeURIComponent(window._currentUser?.email || '');
+  const msg = encodeURIComponent('Olá! Quero assinar o ValiFast. Meu e-mail é: ' + (window._currentUser?.email || ''));
+  window.open('https://wa.me/5524999999999?text=' + msg, '_blank');
+}
+
+async function loadUserProfile(user) {
+  const ref = db.collection('usuarios').doc(user.uid);
+  const snap = await ref.get();
+
+  if (!snap.exists) {
+    const profile = {
+      uid: user.uid,
+      nome: user.displayName || user.email?.split('@')[0] || '',
+      email: user.email || '',
+      plano: 'demo',
+      limiteProdutos: 10,
+      criadoEm: new Date().toISOString(),
+      atualizadoEm: new Date().toISOString()
+    };
+    await ref.set(profile, { merge: true });
+    return profile;
+  }
+
+  const data = snap.data() || {};
+  if (!data.plano) {
+    await ref.set({ plano: 'demo', limiteProdutos: 10, atualizadoEm: new Date().toISOString() }, { merge: true });
+    data.plano = 'demo';
+    data.limiteProdutos = 10;
+  }
+  return data;
+}
+
+function updatePlanBadge() {
+  const badgeId = 'plan-badge-top';
+  let badge = document.getElementById(badgeId);
+  const topbar = document.getElementById('topbar');
+  if (!topbar) return;
+
+  if (!badge) {
+    badge = document.createElement('span');
+    badge.id = badgeId;
+    badge.className = 'plan-badge';
+    topbar.appendChild(badge);
+  }
+
+  const plano = currentPlan();
+  const limite = currentLimit() === Infinity ? 'Ilimitado' : currentLimit() + ' produtos';
+  badge.textContent = plano.toUpperCase() + ' • ' + limite;
+}
+
+auth.onAuthStateChanged(async user => {
   window._currentUser = user;
 
   const loginBtn = document.getElementById('login-btn');
   const badge = document.getElementById('user-badge');
 
-  if (user) {
-    if (loginBtn) loginBtn.style.display = 'none';
-    if (badge) {
-      badge.style.display = 'flex';
-      document.getElementById('user-avatar').src = user.photoURL || '';
-      document.getElementById('user-name').textContent = user.displayName?.split(' ')[0] || 'Usuário';
-    }
-
-    showLoginGate('Carregando seus produtos...');
-    loadFromCloud();
-
-  } else {
+  if (!user) {
     window._currentUser = null;
+    window._userProfile = null;
     products = [];
-    saveData();
     renderDashboard();
     renderList();
 
-    if (loginBtn) loginBtn.style.display = 'flex';
+    if (loginBtn) loginBtn.style.display = 'none';
     if (badge) badge.style.display = 'none';
 
-    showLoginGate('Faça login para continuar.');
+    showAuthGate('Crie sua conta e teste com até 10 produtos.');
+    return;
+  }
+
+  if (loginBtn) loginBtn.style.display = 'none';
+  if (badge) {
+    badge.style.display = 'flex';
+    const avatar = document.getElementById('user-avatar');
+    const name = document.getElementById('user-name');
+    if (avatar) avatar.src = user.photoURL || '';
+    if (name) name.textContent = user.displayName?.split(' ')[0] || user.email?.split('@')[0] || 'Usuário';
+  }
+
+  showAuthGate('Carregando sua conta...');
+  try {
+    window._userProfile = await loadUserProfile(user);
+    updatePlanBadge();
+    await loadFromCloud();
+    showAppAfterLogin();
+  } catch(e) {
+    console.error('Erro ao carregar perfil:', e);
+    showAuthGate('Erro ao carregar sua conta. Verifique o Firebase.');
   }
 });
 
 async function handleLogin() {
-  const status = document.getElementById('login-gate-status');
+  showAuthGate('Use e-mail e senha para entrar.');
+}
+
+async function loginWithEmail() {
+  const email = document.getElementById('login-email')?.value.trim();
+  const password = document.getElementById('login-password')?.value;
+  const status = document.getElementById('auth-status');
+
+  if (!email || !password) {
+    if (status) status.textContent = 'Informe e-mail e senha.';
+    return;
+  }
+
   try {
-    if (status) status.textContent = 'Abrindo login do Google...';
-
-    // Popup funciona bem no desktop. Se o navegador bloquear, cai para redirect.
-    try {
-      await auth.signInWithPopup(provider);
-    } catch (popupError) {
-      console.warn('Popup falhou, usando redirect:', popupError);
-      await auth.signInWithRedirect(provider);
-    }
-
+    if (status) status.textContent = 'Entrando...';
+    await auth.signInWithEmailAndPassword(email, password);
   } catch(e) {
-    console.error('Erro ao entrar:', e);
-    if (status) status.textContent = 'Erro ao abrir login: ' + (e.message || e);
-    if (typeof showToast === 'function') showToast('Erro ao entrar: ' + (e.message || e));
+    console.error(e);
+    if (status) status.textContent = 'Erro ao entrar: ' + traduzAuthError(e.code || e.message);
   }
 }
 
-auth.getRedirectResult().catch(e => {
-  console.error('Erro no retorno do Google:', e);
-  const status = document.getElementById('login-gate-status');
-  if (status) status.textContent = 'Erro no retorno do Google: ' + (e.message || e);
-});
+async function registerWithEmail() {
+  const name = document.getElementById('register-name')?.value.trim();
+  const email = document.getElementById('register-email')?.value.trim();
+  const password = document.getElementById('register-password')?.value;
+  const password2 = document.getElementById('register-password2')?.value;
+  const status = document.getElementById('auth-status');
+
+  if (!name || !email || !password || !password2) {
+    if (status) status.textContent = 'Preencha todos os campos.';
+    return;
+  }
+
+  if (password !== password2) {
+    if (status) status.textContent = 'As senhas não conferem.';
+    return;
+  }
+
+  if (password.length < 6) {
+    if (status) status.textContent = 'A senha precisa ter pelo menos 6 caracteres.';
+    return;
+  }
+
+  try {
+    if (status) status.textContent = 'Criando conta...';
+    const cred = await auth.createUserWithEmailAndPassword(email, password);
+    await cred.user.updateProfile({ displayName: name });
+
+    await db.collection('usuarios').doc(cred.user.uid).set({
+      uid: cred.user.uid,
+      nome: name,
+      email: email,
+      plano: 'demo',
+      limiteProdutos: 10,
+      criadoEm: new Date().toISOString(),
+      atualizadoEm: new Date().toISOString()
+    }, { merge: true });
+
+    if (status) status.textContent = 'Conta criada. Carregando...';
+  } catch(e) {
+    console.error(e);
+    if (status) status.textContent = 'Erro ao criar conta: ' + traduzAuthError(e.code || e.message);
+  }
+}
+
+async function resetPassword() {
+  const email = document.getElementById('login-email')?.value.trim();
+  const status = document.getElementById('auth-status');
+
+  if (!email) {
+    if (status) status.textContent = 'Digite seu e-mail para recuperar a senha.';
+    return;
+  }
+
+  try {
+    await auth.sendPasswordResetEmail(email);
+    if (status) status.textContent = 'Enviamos um link de recuperação para seu e-mail.';
+  } catch(e) {
+    console.error(e);
+    if (status) status.textContent = 'Erro ao recuperar senha: ' + traduzAuthError(e.code || e.message);
+  }
+}
+
+function traduzAuthError(code) {
+  const erros = {
+    'auth/email-already-in-use': 'este e-mail já está cadastrado.',
+    'auth/invalid-email': 'e-mail inválido.',
+    'auth/user-not-found': 'usuário não encontrado.',
+    'auth/wrong-password': 'senha incorreta.',
+    'auth/invalid-login-credentials': 'e-mail ou senha inválidos.',
+    'auth/weak-password': 'senha muito fraca.',
+    'auth/network-request-failed': 'falha de conexão.'
+  };
+  return erros[code] || code;
+}
 
 async function handleLogout() {
   await auth.signOut();
   products = [];
-  saveData();
   renderDashboard();
   renderList();
-  showLoginGate('Faça login para continuar.');
+  showAuthGate('Crie sua conta e teste com até 10 produtos.');
   showToast('Saiu da conta');
 }
 
 async function saveToCloud(entry) {
   if (!window._currentUser) {
-    showToast('Faça login para salvar na nuvem');
+    showToast('Faça login para salvar');
     return;
   }
 
   try {
-    const docRef = await db.collection('products').add({
-      ...entry,
-      uid: window._currentUser.uid,
-      userEmail: window._currentUser.email || '',
-      syncedAt: new Date().toISOString()
-    });
-
-    entry.cloudId = docRef.id;
-    saveData();
-
+    if (entry.cloudId) {
+      await db.collection('products').doc(entry.cloudId).set({
+        ...entry,
+        uid: window._currentUser.uid,
+        userEmail: window._currentUser.email || '',
+        syncedAt: new Date().toISOString()
+      }, { merge: true });
+    } else {
+      const docRef = await db.collection('products').add({
+        ...entry,
+        uid: window._currentUser.uid,
+        userEmail: window._currentUser.email || '',
+        syncedAt: new Date().toISOString()
+      });
+      entry.cloudId = docRef.id;
+      saveData();
+    }
   } catch(e) {
     console.error('Cloud save:', e);
     showToast('Erro ao salvar na nuvem');
@@ -570,13 +909,11 @@ async function loadFromCloud() {
     saveData();
     renderDashboard();
     renderList();
-    showValiFastApp();
+    updatePlanBadge();
 
     showToast('✅ ' + products.length + ' produtos carregados!');
-
   } catch(e) {
-    console.error('Erro ao carregar produtos:', e);
-    showLoginGate('Erro ao carregar seus produtos. Verifique o Firebase/Firestore.');
+    console.error(e);
     showToast('Erro ao carregar seus produtos');
   }
 }
@@ -1011,7 +1348,16 @@ function capitalize(str) {
 
 // ── SAVE PRODUCT ──
 function saveProduct() {
-  if (!window._currentUser) { showToast('Faça login para salvar produtos'); return; }
+  if (!window._currentUser) {
+    showAuthGate('Crie sua conta para usar o ValiFast.');
+    return;
+  }
+
+  if (!canAddProduct()) {
+    openUpgradeModal();
+    return;
+  }
+
   const name = document.getElementById('pf-name-edit').value.trim() || 'Produto sem nome';
   const validade = document.getElementById('pf-validade').value;
   const lote = document.getElementById('pf-lote').value.trim();
