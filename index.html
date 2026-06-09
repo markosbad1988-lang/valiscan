@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ValiFast">
 <link rel="manifest" href="manifest.json">
-<title>ValiFast BETA</title>
+<title>ValiFast BETA SaaS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
@@ -154,10 +154,104 @@
   #cam-status { font-size: 13px; color: var(--text-muted); text-align: center; }
 
   .section-title { font-size: 15px; font-weight: 600; color: var(--text); padding: 4px 0; }
+
+  /* ── LOGIN OBRIGATÓRIO / SAAS INDIVIDUAL ── */
+  #login-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: linear-gradient(135deg, #04342C, #0F6E56);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 22px;
+  }
+  #login-gate.hidden { display: none; }
+  .login-card {
+    width: 100%;
+    max-width: 430px;
+    background: #fff;
+    border-radius: 24px;
+    padding: 28px;
+    text-align: center;
+    box-shadow: 0 28px 80px rgba(0,0,0,0.28);
+  }
+  .login-card h1 {
+    color: var(--green-700);
+    font-size: 30px;
+    margin-bottom: 8px;
+  }
+  .login-card p {
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.45;
+    margin-bottom: 18px;
+  }
+  .login-btn-main {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    background: var(--green-700);
+    color: #fff;
+    font-family: var(--font);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .login-status {
+    margin-top: 12px;
+    color: var(--text-muted);
+    font-size: 13px;
+    white-space: pre-line;
+  }
+  .beta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--green-50);
+    color: var(--green-700);
+    border-radius: 999px;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+
 </style>
 </head>
 <body>
-<div id="app">
+<div id="login-gate">
+  <div class="login-card">
+    <div class="beta-pill">Beta SaaS • acesso individual</div>
+    <h1>ValiFast</h1>
+    <p>
+      Entre com Google para usar o ValiFast.
+      <br><br>
+      Cada usuário terá seus próprios produtos, relatórios e exportações.
+    </p>
+    <button class="login-btn-main" onclick="handleLogin()">Entrar com Google</button>
+    <div id="login-gate-status" class="login-status">Aguardando login...</div>
+  </div>
+</div>
+<div id="app" style="display:none;">
+
+  
+<!--
+VALIFAST BETA SAAS INDIVIDUAL
+
+Modelo desta versão:
+- Login Google obrigatório.
+- Cada usuário possui seus próprios produtos.
+- Produtos salvos em: usuarios/{uid}/produtos/{produtoId}
+- Perfil salvo em: usuarios/{uid}
+- Exportações usam somente a lista do usuário logado.
+
+Próxima etapa comercial:
+- Adicionar campo plano no documento usuarios/{uid}
+- Limitar plano gratuito por quantidade de produtos
+- Integrar pagamento recorrente futuramente
+-->
 
   <!-- TOP BAR -->
   <div id="topbar" style="background:#fff;">
@@ -167,7 +261,7 @@
         <img id="user-avatar" src="" width="20" height="20" style="border-radius:50%;">
         <span id="user-name"></span>
       </div>
-      <button id="login-btn" class="icon-btn" onclick="handleLogin()" title="Entrar com Google" style="font-size:12px;width:auto;padding:0 10px;gap:5px;display:flex;">
+      <span style="font-size:11px;color:#0F6E56;font-weight:600;background:#E1F5EE;border-radius:999px;padding:6px 10px;margin-right:6px;">Beta Individual</span><button id="login-btn" class="icon-btn" onclick="handleLogin()" title="Entrar com Google" style="font-size:12px;width:auto;padding:0 10px;gap:5px;display:flex;">
         ☁️ Entrar
       </button>
       <button class="icon-btn" onclick="showInstallPrompt()" title="Instalar app">
@@ -348,27 +442,96 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 const provider = new firebase.auth.GoogleAuthProvider();
 
-auth.onAuthStateChanged(user => {
+
+function showLoginGate(message) {
+  const gate = document.getElementById('login-gate');
+  const app = document.getElementById('app');
+  const status = document.getElementById('login-gate-status');
+  if (gate) gate.classList.remove('hidden');
+  if (app) app.style.display = 'none';
+  if (status && message) status.textContent = message;
+}
+
+function showValiFastApp() {
+  const gate = document.getElementById('login-gate');
+  const app = document.getElementById('app');
+  if (gate) gate.classList.add('hidden');
+  if (app) app.style.display = 'flex';
+}
+
+function userProductsRef() {
+  if (!window._currentUser) throw new Error('Usuário não logado');
+  return db.collection('usuarios').doc(window._currentUser.uid).collection('produtos');
+}
+
+function userLocalKey() {
+  if (!window._currentUser) return 'valifast_guest_products';
+  return 'valifast_products_' + window._currentUser.uid;
+}
+
+async function ensureUserProfile(user) {
+  if (!user || !user.uid) return;
+  await db.collection('usuarios').doc(user.uid).set({
+    uid: user.uid,
+    nome: user.displayName || '',
+    email: user.email || '',
+    foto: user.photoURL || '',
+    plano: 'gratuito',
+    updatedAt: new Date().toISOString()
+  }, { merge: true });
+}
+
+auth.onAuthStateChanged(async user => {
   window._currentUser = user;
+
   const loginBtn = document.getElementById('login-btn');
   const badge = document.getElementById('user-badge');
-  if (user) {
-    loginBtn.style.display = 'none';
-    badge.style.display = 'flex';
-    document.getElementById('user-avatar').src = user.photoURL || '';
-    document.getElementById('user-name').textContent = user.displayName?.split(' ')[0] || 'Usuário';
-    loadFromCloud();
-  } else {
-    loginBtn.style.display = 'flex';
-    badge.style.display = 'none';
+
+  if (!user) {
+    products = [];
+    if (loginBtn) loginBtn.style.display = 'flex';
+    if (badge) badge.style.display = 'none';
+    showLoginGate('Faça login para continuar.');
+    return;
   }
+
+  if (loginBtn) loginBtn.style.display = 'none';
+  if (badge) {
+    badge.style.display = 'flex';
+    const avatar = document.getElementById('user-avatar');
+    const name = document.getElementById('user-name');
+    if (avatar) avatar.src = user.photoURL || '';
+    if (name) name.textContent = user.displayName?.split(' ')[0] || 'Usuário';
+  }
+
+  showLoginGate('Carregando seus produtos...');
+  try {
+    await ensureUserProfile(user);
+  } catch(e) {
+    console.error('Perfil do usuário:', e);
+  }
+
+  showValiFastApp();
+  loadFromCloud();
 });
 
 async function handleLogin() {
+  const status = document.getElementById('login-gate-status');
   try {
-    await auth.signInWithPopup(provider);
-  } catch(e) { showToast('Erro ao entrar: ' + e.message); }
+    if (status) status.textContent = 'Abrindo login do Google...';
+    await auth.signInWithRedirect(provider);
+  } catch(e) {
+    console.error('Erro ao entrar:', e);
+    if (status) status.textContent = 'Erro ao abrir login: ' + (e.message || e);
+    if (typeof showToast === 'function') showToast('Erro ao entrar: ' + (e.message || e));
+  }
 }
+
+auth.getRedirectResult().catch(e => {
+  console.error('Erro no retorno do Google:', e);
+  const status = document.getElementById('login-gate-status');
+  if (status) status.textContent = 'Erro no retorno do Google: ' + (e.message || e);
+});
 
 async function handleLogout() {
   await auth.signOut();
@@ -376,26 +539,38 @@ async function handleLogout() {
 }
 
 async function saveToCloud(entry) {
-  if (!window._currentUser) return;
+  if (!window._currentUser) {
+    showToast('Faça login para salvar na nuvem');
+    return;
+  }
   try {
-    await db.collection('products').add({ ...entry, uid: window._currentUser.uid, syncedAt: new Date().toISOString() });
-  } catch(e) { console.error('Cloud save:', e); }
+    const docId = String(entry.id);
+    await userProductsRef().doc(docId).set({
+      ...entry,
+      uid: window._currentUser.uid,
+      userEmail: window._currentUser.email || '',
+      syncedAt: new Date().toISOString()
+    }, { merge: true });
+  } catch(e) {
+    console.error('Cloud save:', e);
+    showToast('Erro ao salvar na nuvem');
+  }
 }
 
 async function loadFromCloud() {
   if (!window._currentUser) return;
   try {
-    showToast('☁️ Sincronizando...');
-    const snap = await db.collection('products').where('uid', '==', window._currentUser.uid).get();
-    const cloudProducts = snap.docs.map(d => ({ ...d.data(), cloudId: d.id }));
-    const cloudIds = new Set(cloudProducts.map(p => p.id));
-    const localOnly = products.filter(p => !cloudIds.has(p.id));
-    products = [...cloudProducts, ...localOnly];
+    showToast('☁️ Carregando seus produtos...');
+    const snap = await userProductsRef().orderBy('savedAt', 'desc').get();
+    products = snap.docs.map(d => ({ ...d.data(), cloudId: d.id }));
     saveData();
     renderDashboard();
     renderList();
-    showToast('✅ ' + products.length + ' produtos sincronizados!');
-  } catch(e) { showToast('Erro ao sincronizar'); console.error(e); }
+    showToast('✅ ' + products.length + ' produtos carregados!');
+  } catch(e) {
+    showToast('Erro ao carregar seus produtos');
+    console.error(e);
+  }
 }
 </script>
 
@@ -404,7 +579,7 @@ async function loadFromCloud() {
 
 <script>
 // ── STATE ──
-let products = JSON.parse(localStorage.getItem('valiscan_products') || '[]');
+let products = [];
 let currentEAN = null;
 let activeFilter = 'all';
 let codeReader = null;
@@ -828,6 +1003,7 @@ function capitalize(str) {
 
 // ── SAVE PRODUCT ──
 function saveProduct() {
+  if (!window._currentUser) { showToast('Faça login para salvar produtos'); return; }
   const name = document.getElementById('pf-name-edit').value.trim() || 'Produto sem nome';
   const validade = document.getElementById('pf-validade').value;
   const lote = document.getElementById('pf-lote').value.trim();
@@ -859,7 +1035,8 @@ function saveProduct() {
 
 // ── STORAGE ──
 function saveData() {
-  localStorage.setItem('valiscan_products', JSON.stringify(products));
+  if (!window._currentUser) return;
+  localStorage.setItem(userLocalKey(), JSON.stringify(products));
 }
 
 // ── STATUS HELPER ──
@@ -975,7 +1152,7 @@ function deleteProduct(id) {
   saveData();
   // Remover do Firebase também
   if (window._currentUser && typeof db !== 'undefined' && p.cloudId) {
-    db.collection('products').doc(p.cloudId).delete().catch(e => console.error(e));
+    userProductsRef().doc(String(p.id)).delete().catch(e => console.error(e));
   }
   renderList();
   renderDashboard();
