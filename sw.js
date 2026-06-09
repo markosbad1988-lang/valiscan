@@ -1,4 +1,4 @@
-const CACHE = 'valifast-v2-saas';
+const CACHE = 'valifast-v3-saas-dashboard';
 const ASSETS = [
   '/',
   '/index.html',
