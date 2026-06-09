@@ -1,4 +1,4 @@
-const CACHE = 'valiscan-v1';
+const CACHE = 'valifast-v2-saas';
 const ASSETS = [
   '/',
   '/index.html',
