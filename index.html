@@ -343,6 +343,58 @@
     white-space: nowrap;
   }
 
+
+  .dashboard-hero {
+    background: linear-gradient(135deg, var(--green-900), var(--green-700));
+    color: #fff;
+    border-radius: var(--radius);
+    padding: 18px;
+    border: 1px solid rgba(255,255,255,.12);
+  }
+  .dashboard-hero h2 {
+    font-size: 22px;
+    margin-bottom: 6px;
+  }
+  .dashboard-hero p {
+    opacity: .86;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .risk-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  .risk-value {
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--red-400);
+    margin-top: 6px;
+  }
+  .risk-sub {
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  .mini-table {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .mini-table-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .mini-table-row:last-child { border-bottom: none; }
+  .mini-table-row strong { color: var(--text); }
+  .mini-table-row span { color: var(--text-muted); }
+
 </style>
 </head>
 <body>
@@ -1426,36 +1478,122 @@ function formatValidade(v) {
 }
 
 // ── DASHBOARD ──
+
+function escapeHtml(text) {
+  return String(text ?? '').replace(/[&<>"']/g, (m) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+  }[m]));
+}
+
 function renderDashboard() {
+  const el = document.getElementById('dashboard-view');
+  if (!el) return;
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const toDate = (validade) => {
+    if (!validade) return null;
+    const parts = String(validade).split('-');
+    if (parts.length < 2) return null;
+    return new Date(Number(parts[0]), Number(parts[1]), 0);
+  };
+
+  const daysUntil = (validade) => {
+    const d = toDate(validade);
+    if (!d) return null;
+    return Math.ceil((d - today) / (1000 * 60 * 60 * 24));
+  };
+
   const total = products.length;
-  const expired = products.filter(p => getStatus(p.validade) === 'expired').length;
-  const warn30 = products.filter(p => getStatus(p.validade) === 'danger').length;
-  const warn90 = products.filter(p => getStatus(p.validade) === 'warning').length;
+  const expired = products.filter(p => {
+    const days = daysUntil(p.validade);
+    return days !== null && days < 0;
+  }).length;
 
-  document.getElementById('st-total').textContent = total;
-  document.getElementById('st-exp').textContent = expired;
-  document.getElementById('st-30').textContent = warn30;
-  document.getElementById('st-90').textContent = warn90;
+  const warning30 = products.filter(p => {
+    const days = daysUntil(p.validade);
+    return days !== null && days >= 0 && days <= 30;
+  }).length;
 
-  const alerts = products.filter(p => ['expired','danger','warning'].includes(getStatus(p.validade)));
-  alerts.sort((a,b) => a.validade.localeCompare(b.validade));
+  const warning90 = products.filter(p => {
+    const days = daysUntil(p.validade);
+    return days !== null && days >= 0 && days <= 90;
+  }).length;
 
-  const list = document.getElementById('alert-list');
-  if (!alerts.length) {
-    list.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><p>Nenhum alerta</p></div>';
-    return;
-  }
-  list.innerHTML = alerts.slice(0,20).map(p => {
-    const s = getStatus(p.validade);
-    return `<div class="item-row">
-      <div class="item-dot ${s}"></div>
-      <div class="item-info">
-        <div class="item-name">${p.name}</div>
-        <div class="item-sub">${p.ean}${p.lote ? ' · Lote: '+p.lote : ''}</div>
+  const ok = products.filter(p => {
+    const days = daysUntil(p.validade);
+    return days !== null && days > 90;
+  }).length;
+
+  const riskValue = products.reduce((acc, p) => {
+    const days = daysUntil(p.validade);
+    const qty = Number(p.qty || p.quantidade || 1);
+    const value = Number(p.valor || p.value || 0);
+    if (days !== null && days <= 30) return acc + (qty * value);
+    return acc;
+  }, 0);
+
+  const recent = [...products]
+    .sort((a,b) => String(b.savedAt || '').localeCompare(String(a.savedAt || '')))
+    .slice(0,5);
+
+  const plano = currentPlan ? currentPlan() : 'demo';
+  const limite = currentLimit ? currentLimit() : 10;
+  const limiteTxt = limite === Infinity ? 'Ilimitado' : limite + ' produtos';
+  const usadosTxt = total + ' de ' + limiteTxt;
+
+  el.innerHTML = `
+    <div class="dashboard-hero">
+      <h2>Resumo do ValiFast</h2>
+      <p>Plano atual: <strong>${plano.toUpperCase()}</strong> • Uso: <strong>${usadosTxt}</strong></p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card total">
+        <div class="stat-label">Total</div>
+        <div class="stat-value">${total}</div>
       </div>
-      <div class="item-val ${s}">${getDaysLabel(p.validade)}</div>
-    </div>`;
-  }).join('');
+      <div class="stat-card danger">
+        <div class="stat-label">Vencidos</div>
+        <div class="stat-value">${expired}</div>
+      </div>
+      <div class="stat-card warning">
+        <div class="stat-label">Vencem em 30 dias</div>
+        <div class="stat-value">${warning30}</div>
+      </div>
+      <div class="stat-card ok">
+        <div class="stat-label">Dentro da validade</div>
+        <div class="stat-value">${ok}</div>
+      </div>
+    </div>
+
+    <div class="risk-card">
+      <div class="stat-label">Valor estimado em risco</div>
+      <div class="risk-value">R$ ${riskValue.toFixed(2).replace('.', ',')}</div>
+      <div class="risk-sub">Soma de produtos vencidos ou vencendo em até 30 dias com valor informado.</div>
+    </div>
+
+    <div class="mini-table">
+      <div class="mini-table-row"><strong>Vencem em até 90 dias</strong><span>${warning90}</span></div>
+      <div class="mini-table-row"><strong>Produtos cadastrados no plano</strong><span>${usadosTxt}</span></div>
+      <div class="mini-table-row"><strong>Status comercial</strong><span>${total >= limite && limite !== Infinity ? 'Upgrade recomendado' : 'Operando'}</span></div>
+    </div>
+
+    <div class="section-title">Últimos produtos</div>
+    <div class="item-list">
+      ${recent.length ? recent.map(p => `
+        <div class="item-row">
+          <div class="item-dot ${getStatusClass(p.validade)}"></div>
+          <div class="item-info">
+            <div class="item-name">${escapeHtml(p.name || 'Produto sem nome')}</div>
+            <div class="item-sub">EAN ${escapeHtml(p.ean || '')} • Qtd ${p.qty || p.quantidade || 1}</div>
+          </div>
+          <div class="item-val ${getStatusClass(p.validade)}">${formatValidity(p.validade)}</div>
+        </div>
+      `).join('') : `<div class="empty-state"><div class="empty-icon">📦</div><p>Nenhum produto cadastrado ainda.</p></div>`}
+    </div>
+  `;
 }
 
 // ── LIST VIEW ──
