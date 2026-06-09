@@ -775,13 +775,16 @@ function closeUpgradeModal() {
 }
 
 function requestUpgrade(){
-  const user=window._currentUser;
-  const msg=encodeURIComponent('Olá! Quero assinar o ValiFast.
+  const user = window._currentUser;
+  const nome = ((window._userProfile && window._userProfile.nome) || user?.displayName || '');
+  const email = (user?.email || '');
+  const texto = `Olá! Quero assinar o ValiFast.
 
-Nome: '+((window._userProfile&&window._userProfile.nome)||user?.displayName||'')+'
-E-mail: '+(user?.email||'')+'
-Plano desejado: Individual ou Profissional');
-  window.open('https://wa.me/5524999999999?text='+msg,'_blank');
+Nome: ${nome}
+E-mail: ${email}
+Plano desejado: Individual ou Profissional`;
+  const msg = encodeURIComponent(texto);
+  window.open('https://wa.me/5524999999999?text=' + msg, '_blank');
 }
 
 async function loadUserProfile(user) {
