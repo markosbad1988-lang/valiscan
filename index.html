@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ValiFast">
 <link rel="manifest" href="manifest.json">
-<title>ValiFast BETA SaaS</title>
+<title>ValiFast BETA SaaS Individual</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
@@ -231,26 +231,25 @@
       Cada usuário terá seus próprios produtos, relatórios e exportações.
     </p>
     <button class="login-btn-main" onclick="handleLogin()">Entrar com Google</button>
-    <div id="login-gate-status" class="login-status">Aguardando login...</div>
+    <div id="login-gate-status" class="login-status">Faça login para continuar.</div>
   </div>
 </div>
 <div id="app" style="display:none;">
 
   
 <!--
-VALIFAST BETA SAAS INDIVIDUAL
+VALIFAST BETA SAAS INDIVIDUAL - VERSÃO CORRIGIDA
 
-Modelo desta versão:
-- Login Google obrigatório.
-- Cada usuário possui seus próprios produtos.
-- Produtos salvos em: usuarios/{uid}/produtos/{produtoId}
-- Perfil salvo em: usuarios/{uid}
-- Exportações usam somente a lista do usuário logado.
+Correções aplicadas:
+1. Login obrigatório antes de usar o app.
+2. Produtos não carregam mais do localStorage compartilhado.
+3. Produtos carregam do Firestore filtrando pelo UID:
+   products.where('uid', '==', currentUser.uid)
+4. Ao sair da conta, a lista local é limpa.
+5. Cada usuário vê apenas seus próprios produtos.
 
-Próxima etapa comercial:
-- Adicionar campo plano no documento usuarios/{uid}
-- Limitar plano gratuito por quantidade de produtos
-- Integrar pagamento recorrente futuramente
+Atenção:
+Para segurança completa, ainda falta configurar regras do Firestore.
 -->
 
   <!-- TOP BAR -->
@@ -261,7 +260,7 @@ Próxima etapa comercial:
         <img id="user-avatar" src="" width="20" height="20" style="border-radius:50%;">
         <span id="user-name"></span>
       </div>
-      <span style="font-size:11px;color:#0F6E56;font-weight:600;background:#E1F5EE;border-radius:999px;padding:6px 10px;margin-right:6px;">Beta Individual</span><button id="login-btn" class="icon-btn" onclick="handleLogin()" title="Entrar com Google" style="font-size:12px;width:auto;padding:0 10px;gap:5px;display:flex;">
+      <button id="login-btn" class="icon-btn" onclick="handleLogin()" title="Entrar com Google" style="font-size:12px;width:auto;padding:0 10px;gap:5px;display:flex;">
         ☁️ Entrar
       </button>
       <button class="icon-btn" onclick="showInstallPrompt()" title="Instalar app">
@@ -447,6 +446,7 @@ function showLoginGate(message) {
   const gate = document.getElementById('login-gate');
   const app = document.getElementById('app');
   const status = document.getElementById('login-gate-status');
+
   if (gate) gate.classList.remove('hidden');
   if (app) app.style.display = 'none';
   if (status && message) status.textContent = message;
@@ -455,71 +455,60 @@ function showLoginGate(message) {
 function showValiFastApp() {
   const gate = document.getElementById('login-gate');
   const app = document.getElementById('app');
+
   if (gate) gate.classList.add('hidden');
   if (app) app.style.display = 'flex';
 }
 
-function userProductsRef() {
-  if (!window._currentUser) throw new Error('Usuário não logado');
-  return db.collection('usuarios').doc(window._currentUser.uid).collection('produtos');
-}
-
 function userLocalKey() {
-  if (!window._currentUser) return 'valifast_guest_products';
+  if (!window._currentUser) return 'valifast_sem_login';
   return 'valifast_products_' + window._currentUser.uid;
 }
 
-async function ensureUserProfile(user) {
-  if (!user || !user.uid) return;
-  await db.collection('usuarios').doc(user.uid).set({
-    uid: user.uid,
-    nome: user.displayName || '',
-    email: user.email || '',
-    foto: user.photoURL || '',
-    plano: 'gratuito',
-    updatedAt: new Date().toISOString()
-  }, { merge: true });
-}
-
-auth.onAuthStateChanged(async user => {
+auth.onAuthStateChanged(user => {
   window._currentUser = user;
 
   const loginBtn = document.getElementById('login-btn');
   const badge = document.getElementById('user-badge');
 
-  if (!user) {
+  if (user) {
+    if (loginBtn) loginBtn.style.display = 'none';
+    if (badge) {
+      badge.style.display = 'flex';
+      document.getElementById('user-avatar').src = user.photoURL || '';
+      document.getElementById('user-name').textContent = user.displayName?.split(' ')[0] || 'Usuário';
+    }
+
+    showLoginGate('Carregando seus produtos...');
+    loadFromCloud();
+
+  } else {
+    window._currentUser = null;
     products = [];
+    saveData();
+    renderDashboard();
+    renderList();
+
     if (loginBtn) loginBtn.style.display = 'flex';
     if (badge) badge.style.display = 'none';
+
     showLoginGate('Faça login para continuar.');
-    return;
   }
-
-  if (loginBtn) loginBtn.style.display = 'none';
-  if (badge) {
-    badge.style.display = 'flex';
-    const avatar = document.getElementById('user-avatar');
-    const name = document.getElementById('user-name');
-    if (avatar) avatar.src = user.photoURL || '';
-    if (name) name.textContent = user.displayName?.split(' ')[0] || 'Usuário';
-  }
-
-  showLoginGate('Carregando seus produtos...');
-  try {
-    await ensureUserProfile(user);
-  } catch(e) {
-    console.error('Perfil do usuário:', e);
-  }
-
-  showValiFastApp();
-  loadFromCloud();
 });
 
 async function handleLogin() {
   const status = document.getElementById('login-gate-status');
   try {
     if (status) status.textContent = 'Abrindo login do Google...';
-    await auth.signInWithRedirect(provider);
+
+    // Popup funciona bem no desktop. Se o navegador bloquear, cai para redirect.
+    try {
+      await auth.signInWithPopup(provider);
+    } catch (popupError) {
+      console.warn('Popup falhou, usando redirect:', popupError);
+      await auth.signInWithRedirect(provider);
+    }
+
   } catch(e) {
     console.error('Erro ao entrar:', e);
     if (status) status.textContent = 'Erro ao abrir login: ' + (e.message || e);
@@ -535,6 +524,11 @@ auth.getRedirectResult().catch(e => {
 
 async function handleLogout() {
   await auth.signOut();
+  products = [];
+  saveData();
+  renderDashboard();
+  renderList();
+  showLoginGate('Faça login para continuar.');
   showToast('Saiu da conta');
 }
 
@@ -543,14 +537,18 @@ async function saveToCloud(entry) {
     showToast('Faça login para salvar na nuvem');
     return;
   }
+
   try {
-    const docId = String(entry.id);
-    await userProductsRef().doc(docId).set({
+    const docRef = await db.collection('products').add({
       ...entry,
       uid: window._currentUser.uid,
       userEmail: window._currentUser.email || '',
       syncedAt: new Date().toISOString()
-    }, { merge: true });
+    });
+
+    entry.cloudId = docRef.id;
+    saveData();
+
   } catch(e) {
     console.error('Cloud save:', e);
     showToast('Erro ao salvar na nuvem');
@@ -559,17 +557,27 @@ async function saveToCloud(entry) {
 
 async function loadFromCloud() {
   if (!window._currentUser) return;
+
   try {
     showToast('☁️ Carregando seus produtos...');
-    const snap = await userProductsRef().orderBy('savedAt', 'desc').get();
+
+    const snap = await db.collection('products')
+      .where('uid', '==', window._currentUser.uid)
+      .get();
+
     products = snap.docs.map(d => ({ ...d.data(), cloudId: d.id }));
+
     saveData();
     renderDashboard();
     renderList();
+    showValiFastApp();
+
     showToast('✅ ' + products.length + ' produtos carregados!');
+
   } catch(e) {
+    console.error('Erro ao carregar produtos:', e);
+    showLoginGate('Erro ao carregar seus produtos. Verifique o Firebase/Firestore.');
     showToast('Erro ao carregar seus produtos');
-    console.error(e);
   }
 }
 </script>
@@ -1152,7 +1160,7 @@ function deleteProduct(id) {
   saveData();
   // Remover do Firebase também
   if (window._currentUser && typeof db !== 'undefined' && p.cloudId) {
-    userProductsRef().doc(String(p.id)).delete().catch(e => console.error(e));
+    db.collection('products').doc(p.cloudId).delete().catch(e => console.error(e));
   }
   renderList();
   renderDashboard();
