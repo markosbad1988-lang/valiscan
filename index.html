@@ -1724,6 +1724,9 @@ function renderDashboard() {
   const usadosTxt = total + ' de ' + limiteTxt;
 
   el.innerHTML = `
+    <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:10px 14px;font-size:12px;color:#333;margin-bottom:8px;">
+      🔍 DEBUG — products: ${products?.length ?? 'undef'} | window.products: ${window.products?.length ?? 'undef'} | list: ${list?.length ?? 'undef'} | uid: ${window._currentUser?.uid?.slice(0,8) ?? 'null'}
+    </div>
     <div class="dashboard-hero">
       <h2>Resumo do ValiFast</h2>
       <p>Plano atual: <strong>${String(plano).toUpperCase()}</strong> • Uso: <strong>${usadosTxt}</strong></p>
