@@ -1,4 +1,4 @@
-const CACHE = 'valifast-v21-safe';
+const CACHE = 'valifast-v23-dashboard-viewdash';
 const ASSETS = [
   '/',
   '/index.html',
