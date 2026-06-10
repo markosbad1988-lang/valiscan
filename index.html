@@ -396,144 +396,11 @@
   .mini-table-row span { color: var(--text-muted); }
 
 
-  /* ── VALIFAST V2.1 - DASHBOARD/PLANOS SEM ALTERAR LOGIN ── */
-  .vf-dashboard-hero {
-    background: linear-gradient(135deg, var(--green-900), var(--green-700));
-    color: #fff;
-    border-radius: var(--radius);
-    padding: 18px;
-    border: 1px solid rgba(255,255,255,.12);
-  }
-  .vf-dashboard-hero h2 { font-size: 22px; margin-bottom: 6px; }
-  .vf-dashboard-hero p { opacity: .9; font-size: 13px; line-height: 1.4; }
-  .vf-progress {
-    width: 100%;
-    height: 9px;
-    background: rgba(255,255,255,.22);
-    border-radius: 999px;
-    overflow: hidden;
-    margin-top: 10px;
-  }
-  .vf-progress > div {
-    height: 100%;
-    background: #fff;
-    border-radius: 999px;
-  }
-  .vf-commercial-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-  .vf-wide { grid-column: 1 / -1; }
-  .vf-money-card, .vf-list-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-  }
-  .vf-money-label {
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: .5px;
-    margin-bottom: 6px;
-  }
-  .vf-money-value {
-    font-size: 28px;
-    font-weight: 700;
-    line-height: 1;
-  }
-  .vf-money-value.green { color: var(--green-700); }
-  .vf-money-value.red { color: var(--red-400); }
-  .vf-money-sub {
-    color: var(--text-muted);
-    font-size: 12px;
-    margin-top: 6px;
-  }
-  .vf-list-card h3 {
-    font-size: 15px;
-    margin-bottom: 10px;
-  }
-  .vf-critical-list { display: grid; gap: 8px; }
-  .vf-critical-item {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 8px;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 10px;
-    background: var(--bg);
-    font-size: 13px;
-  }
-  .vf-critical-item strong { color: var(--text); }
-  .vf-critical-item span { color: var(--text-muted); }
-  .vf-critical-days.danger { color: var(--red-400); font-weight: 700; }
-  .vf-critical-days.warning { color: var(--amber-400); font-weight: 700; }
-  .vf-account-modal {
-    position: fixed;
-    inset: 0;
-    z-index: 12000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0,0,0,.55);
-    padding: 16px;
-  }
-  .vf-account-modal.show { display: flex; }
-  .vf-account-card {
-    width: 100%;
-    max-width: 520px;
-    background: #fff;
-    border-radius: 24px;
-    padding: 22px;
-    box-shadow: 0 28px 80px rgba(0,0,0,.35);
-  }
-  .vf-account-card h2 { color: var(--green-700); font-size: 24px; margin-bottom: 8px; }
-  .vf-account-card p { color: var(--text-muted); font-size: 13px; }
-  .vf-account-grid { display: grid; gap: 10px; margin-top: 16px; }
-  .vf-account-info {
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 12px;
-    background: var(--bg);
-  }
-  .vf-account-info small {
-    display: block;
-    color: var(--text-muted);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: .4px;
-    margin-bottom: 4px;
-  }
-  .vf-account-info strong {
-    color: var(--text);
-    font-size: 15px;
-    word-break: break-word;
-  }
-  .vf-account-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-top: 16px;
-  }
-  .vf-upgrade-top-btn {
-    border: none;
-    background: var(--amber-400);
-    color: #fff;
-    border-radius: 999px;
-    padding: 7px 12px;
-    font-family: var(--font);
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    margin-left: 8px;
-  }
-  @media(max-width:640px){
-    .vf-commercial-grid { grid-template-columns: 1fr; }
-    .vf-wide { grid-column: auto; }
-    .vf-account-actions { grid-template-columns: 1fr; }
-  }
+  /* ── DASHBOARD VALIFAST CORRIGIDO ── */
+  .vf-dashboard-hero{background:linear-gradient(135deg,var(--green-900),var(--green-700));color:#fff;border-radius:var(--radius);padding:18px;border:1px solid rgba(255,255,255,.12)}
+  .vf-dashboard-hero h2{font-size:22px;margin-bottom:6px}.vf-dashboard-hero p{opacity:.9;font-size:13px;line-height:1.4}.vf-progress{width:100%;height:9px;background:rgba(255,255,255,.22);border-radius:999px;overflow:hidden;margin-top:10px}.vf-progress>div{height:100%;background:#fff;border-radius:999px}
+  .vf-commercial-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.vf-wide{grid-column:1/-1}.vf-money-card,.vf-list-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}.vf-money-label{font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}.vf-money-value{font-size:28px;font-weight:700;line-height:1}.vf-money-value.green{color:var(--green-700)}.vf-money-value.red{color:var(--red-400)}.vf-money-sub{color:var(--text-muted);font-size:12px;margin-top:6px}.vf-list-card h3{font-size:15px;margin-bottom:10px}.vf-critical-list{display:grid;gap:8px}.vf-critical-item{display:grid;grid-template-columns:1fr auto;gap:8px;border:1px solid var(--border);border-radius:12px;padding:10px;background:var(--bg);font-size:13px}.vf-critical-item strong{color:var(--text)}.vf-critical-item span{color:var(--text-muted)}.vf-critical-days.danger{color:var(--red-400);font-weight:700}.vf-critical-days.warning{color:var(--amber-400);font-weight:700}.vf-upgrade-top-btn{border:none;background:var(--amber-400);color:#fff;border-radius:999px;padding:7px 12px;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;margin-left:8px}
+  .vf-account-modal{position:fixed;inset:0;z-index:12000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);padding:16px}.vf-account-modal.show{display:flex}.vf-account-card{width:100%;max-width:520px;background:#fff;border-radius:24px;padding:22px;box-shadow:0 28px 80px rgba(0,0,0,.35)}.vf-account-card h2{color:var(--green-700);font-size:24px;margin-bottom:8px}.vf-account-card p{color:var(--text-muted);font-size:13px}.vf-account-grid{display:grid;gap:10px;margin-top:16px}.vf-account-info{border:1px solid var(--border);border-radius:14px;padding:12px;background:var(--bg)}.vf-account-info small{display:block;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}.vf-account-info strong{color:var(--text);font-size:15px;word-break:break-word}.vf-account-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}@media(max-width:640px){.vf-commercial-grid{grid-template-columns:1fr}.vf-wide{grid-column:auto}.vf-account-actions{grid-template-columns:1fr}}
 
 </style>
 </head>
@@ -593,14 +460,12 @@
   <div class="vf-account-card">
     <h2>Minha conta</h2>
     <p>Gerencie seu acesso, plano e uso do ValiFast.</p>
-
     <div class="vf-account-grid">
       <div class="vf-account-info"><small>Nome</small><strong id="vf-acc-name">Usuário</strong></div>
       <div class="vf-account-info"><small>E-mail</small><strong id="vf-acc-email">-</strong></div>
       <div class="vf-account-info"><small>Plano atual</small><strong id="vf-acc-plan">DEMO</strong></div>
       <div class="vf-account-info"><small>Uso do plano</small><strong id="vf-acc-usage">0 de 10 produtos</strong></div>
     </div>
-
     <div class="vf-account-actions">
       <button class="btn btn-secondary" onclick="vfSendPasswordReset()">Alterar senha</button>
       <button class="btn btn-primary" onclick="openUpgradeModal()">Assinar plano</button>
@@ -703,17 +568,7 @@ limiteProdutos: 250 ou 999999
 
     <!-- DASHBOARD VIEW -->
     <div id="view-dash" class="view">
-      <div class="section-title">Resumo</div>
-      <div class="stats-grid">
-        <div class="stat-card total"><div class="stat-label">Total</div><div class="stat-value" id="st-total">0</div></div>
-        <div class="stat-card danger"><div class="stat-label">Vencidos</div><div class="stat-value" id="st-exp">0</div></div>
-        <div class="stat-card warning"><div class="stat-label">Até 30 dias</div><div class="stat-value" id="st-30">0</div></div>
-        <div class="stat-card ok"><div class="stat-label">Até 90 dias</div><div class="stat-value" id="st-90">0</div></div>
-      </div>
-      <div class="section-title" style="margin-top:4px">Alertas</div>
-      <div id="alert-list" class="item-list">
-        <div class="empty-state"><div class="empty-icon">✅</div><p>Nenhum alerta</p></div>
-      </div>
+      <div id="dashboard-root"></div>
     </div>
 
     <!-- LIST VIEW -->
@@ -768,7 +623,7 @@ limiteProdutos: 250 ou 999999
       <div class="card" style="margin-top:4px">
         <div class="card-title">Sobre o ValiFast</div>
         <p style="font-size:13px;color:var(--text-muted);line-height:1.6">
-          Versão 2.1 · SaaS · Dados salvos na nuvem por usuário.<br>
+          Versão 2.5 · SaaS · Dados salvos na nuvem por usuário.<br>
           Planos: Demonstração, Individual e Profissional.
         </p>
       </div>
@@ -801,7 +656,49 @@ limiteProdutos: 250 ou 999999
 <div id="toast"></div>
 
 <!-- Firebase SDK compat (funciona sem type=module) -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">
+function vfGetProducts(){ try{ if(Array.isArray(products)) return products; }catch(e){} if(Array.isArray(window.products)) return window.products; return []; }
+function vfPlanName(){ try{return currentPlan?currentPlan():((window._userProfile&&window._userProfile.plano)||'demo');}catch(e){return 'demo';}}
+function vfPlanLimit(){const p=vfPlanName();try{return currentLimit?currentLimit():(p==='individual'?250:(p==='profissional'||p==='admin'?Infinity:10));}catch(e){return p==='individual'?250:(p==='profissional'||p==='admin'?Infinity:10);}}
+function vfMoney(v){return 'R$ '+Number(v||0).toFixed(2).replace('.',',');}
+function vfEsc(text){return String(text??'').replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m];});}
+function vfDaysUntil(validade){ if(!validade)return null; const p=String(validade).split('-'); if(p.length<2)return null; const y=Number(p[0]),m=Number(p[1]); if(!y||!m)return null; const today=new Date(); today.setHours(0,0,0,0); const d=new Date(y,m,0); return Math.ceil((d-today)/86400000); }
+function vfFmtValidity(validade){ try{ if(typeof formatValidade==='function') return formatValidade(validade); }catch(e){} try{ if(typeof formatValidity==='function') return formatValidity(validade); }catch(e){} return validade||''; }
+function vfStatusClass(validade){ try{ if(typeof getStatus==='function') return getStatus(validade); }catch(e){} try{ if(typeof getStatusClass==='function') return getStatusClass(validade); }catch(e){} const d=vfDaysUntil(validade); if(d===null)return 'ok'; if(d<0)return 'expired'; if(d<=30)return 'danger'; if(d<=90)return 'warning'; return 'ok'; }
+function vfInjectAssinarButton(){const topbar=document.getElementById('topbar'); if(!topbar)return; let btn=document.getElementById('vf-upgrade-top-btn'); if(!btn){btn=document.createElement('button'); btn.id='vf-upgrade-top-btn'; btn.className='vf-upgrade-top-btn'; btn.textContent='Assinar'; btn.onclick=openUpgradeModal; topbar.appendChild(btn);} btn.style.display=vfPlanName()==='demo'?'inline-flex':'none';}
+function vfOpenAccountModal(){vfUpdateAccountModal();document.getElementById('vf-account-modal')?.classList.add('show');}
+function vfCloseAccountModal(){document.getElementById('vf-account-modal')?.classList.remove('show');}
+function vfUpdateAccountModal(){const list=vfGetProducts();const user=window._currentUser;const profile=window._userProfile||{};const plano=vfPlanName();const limite=vfPlanLimit();const lim=limite===Infinity?'Ilimitado':limite+' produtos';const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};set('vf-acc-name',profile.nome||user?.displayName||user?.email?.split('@')[0]||'Usuário');set('vf-acc-email',user?.email||'-');set('vf-acc-plan',String(plano).toUpperCase());set('vf-acc-usage',list.length+' de '+lim);}
+async function vfSendPasswordReset(){const email=window._currentUser?.email;if(!email)return showToast('E-mail não encontrado');try{await auth.sendPasswordResetEmail(email);showToast('Link de alteração de senha enviado');}catch(e){console.error(e);showToast('Erro ao enviar recuperação');}}
+function vfRenderDashboard(){
+  const el=document.getElementById('dashboard-root')||document.getElementById('view-dash'); if(!el)return;
+  const list=vfGetProducts();
+  const total=list.length;
+  const expired=list.filter(p=>{const d=vfDaysUntil(p.validade);return d!==null&&d<0;}).length;
+  const warning30=list.filter(p=>{const d=vfDaysUntil(p.validade);return d!==null&&d>=0&&d<=30;}).length;
+  const warning90=list.filter(p=>{const d=vfDaysUntil(p.validade);return d!==null&&d>=0&&d<=90;}).length;
+  const ok=list.filter(p=>{const d=vfDaysUntil(p.validade);return d!==null&&d>90;}).length;
+  const totalStockValue=list.reduce((a,p)=>a+(Number(p.qty||p.quantidade||1)*Number(p.valor||p.value||0)),0);
+  const riskValue=list.reduce((a,p)=>{const d=vfDaysUntil(p.validade);const qty=Number(p.qty||p.quantidade||1);const val=Number(p.valor||p.value||0);return (d!==null&&d<=30)?a+(qty*val):a;},0);
+  const critical=[...list].map(p=>({...p,days:vfDaysUntil(p.validade)})).filter(p=>p.days!==null&&p.days<=90).sort((a,b)=>a.days-b.days).slice(0,6);
+  const recent=[...list].sort((a,b)=>String(b.savedAt||'').localeCompare(String(a.savedAt||''))).slice(0,5);
+  const plano=vfPlanName(); const limite=vfPlanLimit(); const limiteTxt=limite===Infinity?'Ilimitado':limite+' produtos'; const pct=limite===Infinity?100:Math.min(100,Math.round((total/limite)*100));
+  el.innerHTML=`
+    <div class="vf-dashboard-hero"><h2>Resumo do ValiFast</h2><p>Plano atual: <strong>${String(plano).toUpperCase()}</strong> • Uso: <strong>${total} de ${limiteTxt}</strong></p><div class="vf-progress"><div style="width:${pct}%"></div></div></div>
+    <div class="vf-commercial-grid">
+      <div class="stat-card total"><div class="stat-label">Total de produtos</div><div class="stat-value">${total}</div></div>
+      <div class="stat-card danger"><div class="stat-label">Vencidos</div><div class="stat-value">${expired}</div></div>
+      <div class="stat-card warning"><div class="stat-label">Vencem em 30 dias</div><div class="stat-value">${warning30}</div></div>
+      <div class="stat-card ok"><div class="stat-label">Dentro da validade</div><div class="stat-value">${ok}</div></div>
+      <div class="vf-money-card"><div class="vf-money-label">Valor em estoque</div><div class="vf-money-value green">${vfMoney(totalStockValue)}</div><div class="vf-money-sub">Baseado em quantidade e valor unitário informados.</div></div>
+      <div class="vf-money-card"><div class="vf-money-label">Produtos críticos</div><div class="vf-money-value red">${vfMoney(riskValue)}</div><div class="vf-money-sub">Vencidos ou vencendo em até 30 dias.</div></div>
+      <div class="vf-list-card vf-wide"><h3>Produtos críticos</h3><div class="vf-critical-list">${critical.length?critical.map(p=>`<div class="vf-critical-item"><div><strong>${vfEsc(p.name||'Produto sem nome')}</strong><br><span>EAN ${vfEsc(p.ean||'')} • ${vfFmtValidity(p.validade)}</span></div><div class="vf-critical-days ${p.days<0?'danger':'warning'}">${p.days<0?'Vencido':p.days+' dias'}</div></div>`).join(''):`<div class="empty-state"><div class="empty-icon">✅</div><p>Nenhum produto crítico.</p></div>`}</div></div>
+      <div class="vf-list-card vf-wide"><h3>Últimos cadastrados</h3><div class="item-list">${recent.length?recent.map(p=>`<div class="item-row"><div class="item-dot ${vfStatusClass(p.validade)}"></div><div class="item-info"><div class="item-name">${vfEsc(p.name||'Produto sem nome')}</div><div class="item-sub">EAN ${vfEsc(p.ean||'')} • Qtd ${p.qty||p.quantidade||1}${p.local?' • '+vfEsc(p.local):''}</div></div><div class="item-val ${vfStatusClass(p.validade)}">${vfFmtValidity(p.validade)}</div></div>`).join(''):`<div class="empty-state"><div class="empty-icon">📦</div><p>Nenhum produto cadastrado ainda.</p></div>`}</div></div>
+    </div>`;
+  vfInjectAssinarButton(); vfUpdateAccountModal();
+}
+
+</script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script>
@@ -964,9 +861,7 @@ auth.onAuthStateChanged(async user => {
     window._userProfile = await loadUserProfile(user);
     updatePlanBadge();
     await loadFromCloud();
-    setTimeout(() => { vfInjectAssinarButton(); vfUpdateAccountModal(); }, 300);
     showAppAfterLogin();
-    setTimeout(() => { vfInjectAssinarButton(); vfUpdateAccountModal(); }, 300);
   } catch(e) {
     console.error('Erro ao carregar perfil:', e);
     showAuthGate('Erro ao carregar sua conta. Verifique o Firebase.');
@@ -1125,6 +1020,7 @@ async function loadFromCloud() {
     saveData();
     renderDashboard();
     renderList();
+    renderDashboard();
     updatePlanBadge();
 
     showToast('✅ ' + products.length + ' produtos carregados!');
@@ -1649,214 +1545,7 @@ function escapeHtml(text) {
   }[m]));
 }
 
-
-function vfPlanName() {
-  try { return currentPlan ? currentPlan() : ((window._userProfile && window._userProfile.plano) || 'demo'); }
-  catch(e) { return 'demo'; }
-}
-
-function vfPlanLimit() {
-  try { return currentLimit ? currentLimit() : (vfPlanName() === 'individual' ? 250 : (vfPlanName() === 'profissional' ? Infinity : 10)); }
-  catch(e) { return 10; }
-}
-
-function vfMoney(value) {
-  return 'R$ ' + Number(value || 0).toFixed(2).replace('.', ',');
-}
-
-function vfDaysUntil(validade) {
-  if (!validade) return null;
-  const parts = String(validade).split('-');
-  if (parts.length < 2) return null;
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  const d = new Date(Number(parts[0]), Number(parts[1]), 0);
-  return Math.ceil((d - today) / (1000 * 60 * 60 * 24));
-}
-
-function vfEsc(text) {
-  return String(text ?? '').replace(/[&<>"']/g, (m) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
-  }[m]));
-}
-
-function vfOpenAccountModal() {
-  vfUpdateAccountModal();
-  document.getElementById('vf-account-modal')?.classList.add('show');
-}
-
-function vfCloseAccountModal() {
-  document.getElementById('vf-account-modal')?.classList.remove('show');
-}
-
-function vfUpdateAccountModal() {
-  const user = window._currentUser;
-  const profile = window._userProfile || {};
-  const plano = vfPlanName();
-  const limite = vfPlanLimit();
-  const usados = Array.isArray(products) ? products.length : 0;
-  const limiteTxt = limite === Infinity ? 'Ilimitado' : limite + ' produtos';
-
-  const set = (id, value) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = value;
-  };
-
-  set('vf-acc-name', profile.nome || user?.displayName || user?.email?.split('@')[0] || 'Usuário');
-  set('vf-acc-email', user?.email || '-');
-  set('vf-acc-plan', String(plano).toUpperCase());
-  set('vf-acc-usage', usados + ' de ' + limiteTxt);
-}
-
-async function vfSendPasswordReset() {
-  const email = window._currentUser?.email;
-  if (!email) return showToast('E-mail não encontrado');
-  try {
-    await auth.sendPasswordResetEmail(email);
-    showToast('Link de alteração de senha enviado');
-  } catch(e) {
-    console.error(e);
-    showToast('Erro ao enviar recuperação');
-  }
-}
-
-function vfInjectAssinarButton() {
-  const topbar = document.getElementById('topbar');
-  if (!topbar) return;
-
-  let btn = document.getElementById('vf-upgrade-top-btn');
-  if (!btn) {
-    btn = document.createElement('button');
-    btn.id = 'vf-upgrade-top-btn';
-    btn.className = 'vf-upgrade-top-btn';
-    btn.textContent = 'Assinar';
-    btn.onclick = openUpgradeModal;
-    topbar.appendChild(btn);
-  }
-
-  btn.style.display = vfPlanName() === 'demo' ? 'inline-flex' : 'none';
-}
-
-function vfRenderDashboard() {
-  const el = document.getElementById('view-dash');
-  if (!el) return;
-
-  const total = products.length;
-  const expired = products.filter(p => {
-    const d = vfDaysUntil(p.validade);
-    return d !== null && d < 0;
-  }).length;
-
-  const warning30 = products.filter(p => {
-    const d = vfDaysUntil(p.validade);
-    return d !== null && d >= 0 && d <= 30;
-  }).length;
-
-  const warning90 = products.filter(p => {
-    const d = vfDaysUntil(p.validade);
-    return d !== null && d >= 0 && d <= 90;
-  }).length;
-
-  const ok = products.filter(p => {
-    const d = vfDaysUntil(p.validade);
-    return d !== null && d > 90;
-  }).length;
-
-  const totalStockValue = products.reduce((acc, p) => {
-    const qty = Number(p.qty || p.quantidade || 1);
-    const value = Number(p.valor || p.value || 0);
-    return acc + (qty * value);
-  }, 0);
-
-  const riskValue = products.reduce((acc, p) => {
-    const d = vfDaysUntil(p.validade);
-    const qty = Number(p.qty || p.quantidade || 1);
-    const value = Number(p.valor || p.value || 0);
-    if (d !== null && d <= 30) return acc + (qty * value);
-    return acc;
-  }, 0);
-
-  const critical = [...products]
-    .map(p => ({ ...p, days: vfDaysUntil(p.validade) }))
-    .filter(p => p.days !== null && p.days <= 90)
-    .sort((a,b) => a.days - b.days)
-    .slice(0,6);
-
-  const recent = [...products]
-    .sort((a,b) => String(b.savedAt || '').localeCompare(String(a.savedAt || '')))
-    .slice(0,5);
-
-  const plano = vfPlanName();
-  const limite = vfPlanLimit();
-  const limiteTxt = limite === Infinity ? 'Ilimitado' : limite + ' produtos';
-  const pct = limite === Infinity ? 100 : Math.min(100, Math.round((total / limite) * 100));
-
-  el.innerHTML = `
-    <div class="vf-dashboard-hero">
-      <h2>Resumo do ValiFast</h2>
-      <p>Plano atual: <strong>${String(plano).toUpperCase()}</strong> • Uso: <strong>${total} de ${limiteTxt}</strong></p>
-      <div class="vf-progress"><div style="width:${pct}%"></div></div>
-    </div>
-
-    <div class="vf-commercial-grid">
-      <div class="stat-card total"><div class="stat-label">Total de produtos</div><div class="stat-value">${total}</div></div>
-      <div class="stat-card danger"><div class="stat-label">Vencidos</div><div class="stat-value">${expired}</div></div>
-      <div class="stat-card warning"><div class="stat-label">Vencem em 30 dias</div><div class="stat-value">${warning30}</div></div>
-      <div class="stat-card ok"><div class="stat-label">Dentro da validade</div><div class="stat-value">${ok}</div></div>
-
-      <div class="vf-money-card">
-        <div class="vf-money-label">Valor em estoque</div>
-        <div class="vf-money-value green">${vfMoney(totalStockValue)}</div>
-        <div class="vf-money-sub">Baseado em quantidade e valor unitário informados.</div>
-      </div>
-
-      <div class="vf-money-card">
-        <div class="vf-money-label">Valor em risco</div>
-        <div class="vf-money-value red">${vfMoney(riskValue)}</div>
-        <div class="vf-money-sub">Vencidos ou vencendo em até 30 dias.</div>
-      </div>
-
-      <div class="vf-list-card vf-wide">
-        <h3>Produtos críticos</h3>
-        <div class="vf-critical-list">
-          ${critical.length ? critical.map(p => `
-            <div class="vf-critical-item">
-              <div>
-                <strong>${vfEsc(p.name || 'Produto sem nome')}</strong><br>
-                <span>EAN ${vfEsc(p.ean || '')} • ${typeof formatValidity === 'function' ? formatValidity(p.validade) : (p.validade || '')}</span>
-              </div>
-              <div class="vf-critical-days ${p.days < 0 ? 'danger' : 'warning'}">
-                ${p.days < 0 ? 'Vencido' : p.days + ' dias'}
-              </div>
-            </div>
-          `).join('') : `<div class="empty-state"><div class="empty-icon">✅</div><p>Nenhum produto crítico.</p></div>`}
-        </div>
-      </div>
-
-      <div class="vf-list-card vf-wide">
-        <h3>Últimos cadastrados</h3>
-        <div class="item-list">
-          ${recent.length ? recent.map(p => `
-            <div class="item-row">
-              <div class="item-dot ${typeof getStatusClass === 'function' ? getStatusClass(p.validade) : 'ok'}"></div>
-              <div class="item-info">
-                <div class="item-name">${vfEsc(p.name || 'Produto sem nome')}</div>
-                <div class="item-sub">EAN ${vfEsc(p.ean || '')} • Qtd ${p.qty || p.quantidade || 1}${p.local ? ' • ' + vfEsc(p.local) : ''}</div>
-              </div>
-              <div class="item-val ${typeof getStatusClass === 'function' ? getStatusClass(p.validade) : 'ok'}">${typeof formatValidity === 'function' ? formatValidity(p.validade) : (p.validade || '')}</div>
-            </div>
-          `).join('') : `<div class="empty-state"><div class="empty-icon">📦</div><p>Nenhum produto cadastrado ainda.</p></div>`}
-        </div>
-      </div>
-    </div>
-  `;
-
-  vfUpdateAccountModal();
-  vfInjectAssinarButton();
-}
-
-function renderDashboard() { vfRenderDashboard(); }
-
+function renderDashboard(){ vfRenderDashboard(); }
 
 // ── LIST VIEW ──
 function setFilter(btn) {
@@ -1912,38 +1601,14 @@ function deleteProduct(id) {
   renderDashboard();
   showToast('🗑️ ' + p.name + ' excluído');
 }
-
-function exportCSV() {
-  if (!products.length) {
-    showToast('Nenhum produto para exportar');
-    return;
-  }
-
-  const headers = ['Nome','EAN','Validade','Status','Quantidade','Lote','Local','Categoria','Valor unitário','Valor total','Cadastro'];
-  const rows = products.map(p => {
-    const qty = Number(p.qty || p.quantidade || 1);
-    const valor = Number(p.valor || p.value || 0);
-    return [
-      p.name || '',
-      p.ean || '',
-      typeof formatValidity === 'function' ? formatValidity(p.validade) : (p.validade || ''),
-      typeof getStatusLabel === 'function' ? getStatusLabel(p.validade) : '',
-      qty,
-      p.lote || '',
-      p.local || '',
-      p.categoria || '',
-      valor.toFixed(2).replace('.', ','),
-      (qty * valor).toFixed(2).replace('.', ','),
-      p.savedAt ? new Date(p.savedAt).toLocaleString('pt-BR') : ''
-    ];
-  });
-
-  const csv = [headers, ...rows]
-    .map(row => row.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(';'))
-    .join('\n');
-
-  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-  downloadBlob(blob, 'valifast_relatorio_' + new Date().toISOString().slice(0,10) + '.csv');
+function exportCSV(){
+  const list=vfGetProducts();
+  if(!list.length){showToast('Nenhum produto para exportar');return;}
+  const headers=['Nome','EAN','Validade','Status','Quantidade','Lote','Local','Categoria','Valor unitário','Valor total','Cadastro'];
+  const rows=list.map(p=>{const qty=Number(p.qty||p.quantidade||1);const valor=Number(p.valor||p.value||0);return [p.name||'',p.ean||'',vfFmtValidity(p.validade),vfStatusClass(p.validade),qty,p.lote||'',p.local||'',p.categoria||'',valor.toFixed(2).replace('.',','),(qty*valor).toFixed(2).replace('.',','),p.savedAt?new Date(p.savedAt).toLocaleString('pt-BR'):''];});
+  const csv=[headers,...rows].map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  downloadBlob(blob,'valifast_relatorio_'+new Date().toISOString().slice(0,10)+'.csv');
   showToast('CSV exportado');
 }
 
