@@ -1,9 +1,5 @@
-const CACHE = 'valifast-v30-dashboard-sync';
-const ASSETS = [
-  '/',
-  '/index.html',
-  'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap'
-];
+const CACHE = 'valifast-v4';
+const ASSETS = ['/', '/index.html'];
 
 self.addEventListener('install', e => {
   e.waitUntil(

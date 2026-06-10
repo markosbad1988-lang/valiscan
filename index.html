@@ -1074,17 +1074,22 @@ async function loadFromCloud() {
       .where('uid', '==', window._currentUser.uid)
       .get();
 
-    products = snap.docs.map(d => ({ ...d.data(), cloudId: d.id }));
-    window.products = products;
+    const loaded = snap.docs.map(d => ({ ...d.data(), cloudId: d.id }));
+    // Atualiza AMBAS as referências para garantir sincronização entre scripts
+    window.products = loaded;
+    products = window.products;
     saveData();
 
   } catch(e) {
     console.warn('Erro ao carregar produtos da nuvem. Mantendo dados locais:', e);
     try {
       const local = localStorage.getItem(userLocalKey());
-      products = local ? JSON.parse(local) : [];
+      const parsed = local ? JSON.parse(local) : [];
+      window.products = parsed;
+      products = window.products;
     } catch(localErr) {
-      products = [];
+      window.products = [];
+      products = window.products;
     }
   }
 
@@ -1100,7 +1105,9 @@ async function loadFromCloud() {
 
 <script>
 // ── STATE ──
-let products = [];
+// IMPORTANTE: products declarado em window para compartilhar entre blocos de script
+if (!window.products) window.products = [];
+let products = window.products; // referência ao mesmo array
 let currentEAN = null;
 let activeFilter = 'all';
 let codeReader = null;
@@ -1554,6 +1561,7 @@ function saveProduct() {
   };
 
   products.push(entry);
+  window.products = products; // sincroniza referência global
   saveData();
   saveToCloud(entry);
   renderDashboard();
@@ -1613,39 +1621,17 @@ function escapeHtml(text) {
 
 
 function getDashboardProducts() {
+  // Fonte única de verdade — sempre window.products
+  if (Array.isArray(window.products) && window.products.length > 0) return window.products;
+  if (Array.isArray(products) && products.length > 0) return products;
+  // Fallback localStorage
   try {
-    if (Array.isArray(products) && products.length) return products;
-  } catch(e) {}
-
-  try {
-    if (Array.isArray(window.products) && window.products.length) return window.products;
-  } catch(e) {}
-
-  try {
-    const user = window._currentUser;
     if (typeof userLocalKey === 'function') {
       const raw = localStorage.getItem(userLocalKey());
       const parsed = raw ? JSON.parse(raw) : [];
       if (Array.isArray(parsed) && parsed.length) return parsed;
     }
-
-    if (user && user.uid) {
-      const keys = Object.keys(localStorage);
-      for (const k of keys) {
-        if (k.includes(user.uid) || k.includes('valifast')) {
-          try {
-            const parsed = JSON.parse(localStorage.getItem(k));
-            if (Array.isArray(parsed) && parsed.length) return parsed;
-          } catch(e) {}
-        }
-      }
-    }
   } catch(e) {}
-
-  try {
-    if (Array.isArray(products)) return products;
-  } catch(e) {}
-
   return [];
 }
 
