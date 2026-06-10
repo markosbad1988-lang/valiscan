@@ -485,6 +485,43 @@
   .critical-days.danger { color: var(--red-400); font-weight: 700; }
   .critical-days.warning { color: var(--amber-400); font-weight: 700; }
 
+  /* ── MODAIS ── */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 11000;
+    display: none; align-items: center; justify-content: center;
+    background: rgba(0,0,0,.55); padding: 18px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-card {
+    width: 100%; max-width: 480px;
+    background: #fff; border-radius: 24px; padding: 24px;
+    box-shadow: 0 28px 80px rgba(0,0,0,0.35);
+    max-height: 90dvh; overflow-y: auto;
+  }
+  .modal-card h2 { color: var(--green-700); margin-bottom: 6px; font-size: 22px; }
+  .modal-card .modal-sub { color: var(--text-muted); font-size: 13px; margin-bottom: 18px; }
+  .modal-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+  .modal-field label { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+  .modal-field input {
+    padding: 11px 13px; border: 1px solid var(--border); border-radius: 10px;
+    font-family: var(--font); font-size: 15px; background: var(--bg); color: var(--text);
+  }
+  .modal-field input:focus { outline: 2px solid var(--green-500); border-color: transparent; background: #fff; }
+  .modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+  .modal-actions.single { grid-template-columns: 1fr; }
+  .modal-btn { padding: 13px; border-radius: 12px; border: none; font-family: var(--font); font-weight: 600; font-size: 14px; cursor: pointer; }
+  .modal-btn.primary { background: var(--green-700); color: #fff; }
+  .modal-btn.secondary { background: var(--gray-100); color: var(--gray-900); }
+  .modal-btn.danger { background: var(--red-50); color: var(--red-700); border: 1px solid var(--red-400); }
+  .account-info-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 11px 0; border-bottom: 1px solid var(--border); font-size: 14px;
+  }
+  .account-info-row:last-child { border-bottom: none; }
+  .account-info-row span:first-child { color: var(--text-muted); }
+  .account-info-row span:last-child { font-weight: 500; color: var(--text); }
+  .plan-bar { background: var(--gray-100); border-radius: 999px; height: 8px; overflow: hidden; margin-top: 6px; }
+  .plan-bar-fill { height: 100%; border-radius: 999px; background: var(--green-500); transition: width .4s; }
 </style>
 </head>
 <body>
@@ -724,6 +761,51 @@ limiteProdutos: 250 ou 999999
       Exportar
     </button>
   </div>
+
+<!-- MODAL EDITAR PRODUTO -->
+<div id="edit-modal" class="modal-overlay">
+  <div class="modal-card">
+    <h2>✏️ Editar Produto</h2>
+    <p class="modal-sub" id="edit-modal-ean"></p>
+    <div class="modal-field"><label>Nome</label><input type="text" id="edit-name"></div>
+    <div class="modal-field"><label>Validade</label><input type="month" id="edit-validade"></div>
+    <div class="modal-field"><label>Lote</label><input type="text" id="edit-lote" placeholder="Ex: A1234"></div>
+    <div class="modal-field"><label>Quantidade</label><input type="number" id="edit-qty" min="1"></div>
+    <div class="modal-field"><label>Local</label><input type="text" id="edit-local" placeholder="Ex: Prateleira 3"></div>
+    <div class="modal-actions">
+      <button class="modal-btn secondary" onclick="closeEditModal()">Cancelar</button>
+      <button class="modal-btn primary" onclick="saveEditModal()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MINHA CONTA -->
+<div id="account-modal" class="modal-overlay">
+  <div class="modal-card">
+    <h2>👤 Minha Conta</h2>
+    <div class="account-info-row"><span>Nome</span><span id="acc-nome">—</span></div>
+    <div class="account-info-row"><span>E-mail</span><span id="acc-email">—</span></div>
+    <div class="account-info-row"><span>Plano</span><span id="acc-plano">—</span></div>
+    <div class="account-info-row" style="flex-direction:column;align-items:flex-start;gap:6px;">
+      <span>Uso</span>
+      <span id="acc-uso" style="font-weight:500;"></span>
+      <div class="plan-bar"><div class="plan-bar-fill" id="acc-bar" style="width:0%"></div></div>
+    </div>
+    <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px;">
+      <div style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:10px;">ALTERAR SENHA</div>
+      <div class="modal-field"><label>Nova senha</label><input type="password" id="acc-senha1" placeholder="Mínimo 6 caracteres"></div>
+      <div class="modal-field"><label>Confirmar senha</label><input type="password" id="acc-senha2" placeholder="Repita a senha"></div>
+      <div id="acc-msg" style="font-size:13px;color:var(--text-muted);min-height:16px;margin-top:4px;"></div>
+    </div>
+    <div class="modal-actions" style="margin-top:12px;">
+      <button class="modal-btn danger" onclick="handleLogout();closeAccountModal();">Sair da conta</button>
+      <button class="modal-btn primary" onclick="saveAccountChanges()">Salvar senha</button>
+    </div>
+    <div class="modal-actions single" style="margin-top:8px;">
+      <button class="modal-btn secondary" onclick="closeAccountModal()">Fechar</button>
+    </div>
+  </div>
+</div>
 
 </div><!-- /app -->
 
@@ -1828,6 +1910,7 @@ function renderList() {
         <div class="item-sub">EAN ${p.ean}${p.qty > 1 ? ' · Qtd: '+p.qty : ''}${p.local ? ' · '+p.local : ''}</div>
       </div>
       <div class="item-val ${s}">${formatValidade(p.validade)}</div>
+      <button onclick="openEditModal(${p.id})" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--green-500);font-size:15px;flex-shrink:0;" title="Editar">✏️</button>
       <button onclick="deleteProduct(${p.id})" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--gray-500);font-size:16px;flex-shrink:0;" title="Excluir">🗑️</button>
     </div>`;
   }).join('');
@@ -2019,6 +2102,92 @@ function showInstallPrompt() {
     showToast('Já instalado ou use o menu do navegador');
   }
 }
+
+// ── MINHA CONTA ──
+function openAccountModal() {
+  const profile = window._userProfile || {};
+  const user = window._currentUser;
+  document.getElementById('acc-nome').textContent = profile.nome || user?.displayName || '—';
+  document.getElementById('acc-email').textContent = profile.email || user?.email || '—';
+  const plano = currentPlan();
+  const limite = currentLimit();
+  const total = (window.products || products).length;
+  const pct = limite === Infinity ? Math.min(100, Math.round(total / 10)) : Math.min(100, Math.round((total / limite) * 100));
+  document.getElementById('acc-plano').textContent = plano.charAt(0).toUpperCase() + plano.slice(1);
+  document.getElementById('acc-uso').textContent = total + ' de ' + (limite === Infinity ? 'Ilimitado' : limite + ' produtos');
+  document.getElementById('acc-bar').style.width = pct + '%';
+  document.getElementById('acc-bar').style.background = pct >= 90 ? 'var(--red-400)' : pct >= 70 ? 'var(--amber-400)' : 'var(--green-500)';
+  document.getElementById('acc-senha1').value = '';
+  document.getElementById('acc-senha2').value = '';
+  document.getElementById('acc-msg').textContent = '';
+  document.getElementById('account-modal').classList.add('show');
+}
+function closeAccountModal() {
+  document.getElementById('account-modal').classList.remove('show');
+}
+async function saveAccountChanges() {
+  const senha1 = document.getElementById('acc-senha1').value;
+  const senha2 = document.getElementById('acc-senha2').value;
+  const msg = document.getElementById('acc-msg');
+  if (!senha1) { msg.textContent = 'Digite a nova senha.'; msg.style.color = 'var(--text-muted)'; return; }
+  if (senha1 !== senha2) { msg.textContent = 'As senhas não conferem.'; msg.style.color = 'var(--red-400)'; return; }
+  if (senha1.length < 6) { msg.textContent = 'Mínimo 6 caracteres.'; msg.style.color = 'var(--red-400)'; return; }
+  try {
+    msg.textContent = 'Salvando...'; msg.style.color = 'var(--text-muted)';
+    await window._currentUser.updatePassword(senha1);
+    msg.textContent = '✓ Senha alterada!'; msg.style.color = 'var(--green-700)';
+    document.getElementById('acc-senha1').value = '';
+    document.getElementById('acc-senha2').value = '';
+  } catch(e) {
+    msg.textContent = e.code === 'auth/requires-recent-login' ? 'Saia e entre novamente antes de alterar a senha.' : 'Erro: ' + (e.message || e.code);
+    msg.style.color = 'var(--red-400)';
+  }
+}
+
+// ── EDITAR PRODUTO ──
+let _editingId = null;
+function openEditModal(id) {
+  const p = products.find(p => p.id === id);
+  if (!p) return;
+  _editingId = id;
+  document.getElementById('edit-modal-ean').textContent = 'EAN: ' + (p.ean || '—');
+  document.getElementById('edit-name').value = p.name || '';
+  document.getElementById('edit-validade').value = p.validade || '';
+  document.getElementById('edit-lote').value = p.lote || '';
+  document.getElementById('edit-qty').value = p.qty || 1;
+  document.getElementById('edit-local').value = p.local || '';
+  document.getElementById('edit-modal').classList.add('show');
+}
+function closeEditModal() {
+  document.getElementById('edit-modal').classList.remove('show');
+  _editingId = null;
+}
+function saveEditModal() {
+  if (!_editingId) return;
+  const idx = products.findIndex(p => p.id === _editingId);
+  if (idx === -1) return;
+  const name = document.getElementById('edit-name').value.trim() || products[idx].name;
+  const validade = document.getElementById('edit-validade').value;
+  const lote = document.getElementById('edit-lote').value.trim();
+  const qty = parseInt(document.getElementById('edit-qty').value) || 1;
+  const local = document.getElementById('edit-local').value.trim();
+  if (!validade) { showToast('Informe a validade!'); return; }
+  products[idx] = { ...products[idx], name, validade, lote, qty, local };
+  window.products = products;
+  saveData();
+  if (window._currentUser && typeof db !== 'undefined' && products[idx].cloudId) {
+    db.collection('products').doc(products[idx].cloudId).set({ name, validade, lote, qty, local }, { merge: true }).catch(e => console.error(e));
+  }
+  closeEditModal();
+  renderList(); renderDashboard();
+  showToast('✓ Produto atualizado!');
+}
+
+// ── FECHAR MODAIS AO CLICAR FORA ──
+document.addEventListener('click', e => {
+  if (e.target.id === 'edit-modal') closeEditModal();
+  if (e.target.id === 'account-modal') closeAccountModal();
+});
 
 // ── ENTER KEY on EAN input ──
 document.getElementById('ean-input').addEventListener('keydown', e => {
