@@ -875,7 +875,7 @@ auth.onAuthStateChanged(async user => {
   if (!user) {
     window._currentUser = null;
     window._userProfile = null;
-    try { products = []; } catch(e) {}
+    try { window.products = []; products = window.products; } catch(e) {}
     try { renderDashboard(); renderList(); } catch(e) {}
 
     if (loginBtn) loginBtn.style.display = 'none';
@@ -918,9 +918,11 @@ auth.onAuthStateChanged(async user => {
     console.warn('Produtos não carregaram da nuvem. Usando local:', e);
     try {
       const local = localStorage.getItem(userLocalKey());
-      products = local ? JSON.parse(local) : [];
+      window.products = local ? JSON.parse(local) : [];
+      products = window.products;
     } catch(localErr) {
-      products = [];
+      window.products = [];
+      products = window.products;
     }
   }
 
@@ -1029,7 +1031,8 @@ function traduzAuthError(code) {
 
 async function handleLogout() {
   await auth.signOut();
-  products = [];
+  window.products = [];
+  products = window.products;
   renderDashboard();
   renderList();
   showAuthGate('Crie sua conta e teste com até 10 produtos.');
@@ -1067,7 +1070,8 @@ async function saveToCloud(entry) {
 }
 
 async function loadFromCloud() {
-  if (!window._currentUser) return;
+  if (!window._currentUser) { console.log('[loadFromCloud] sem usuário logado'); return; }
+  console.log('[loadFromCloud] uid:', window._currentUser.uid);
 
   try {
     const snap = await db.collection('products')
@@ -1075,9 +1079,11 @@ async function loadFromCloud() {
       .get();
 
     const loaded = snap.docs.map(d => ({ ...d.data(), cloudId: d.id }));
+    console.log('[loadFromCloud] docs no Firestore:', snap.size, '| produtos mapeados:', loaded.length);
     // Atualiza AMBAS as referências para garantir sincronização entre scripts
     window.products = loaded;
     products = window.products;
+    console.log('[loadFromCloud] window.products após atribuição:', window.products.length);
     saveData();
 
   } catch(e) {
@@ -1646,10 +1652,8 @@ async function syncDashboardProductsFromCloud() {
     const cloudProducts = snap.docs.map(d => ({ ...d.data(), cloudId: d.id }));
 
     if (Array.isArray(cloudProducts)) {
-      products = cloudProducts;
-      window.products = products;
       window.products = cloudProducts;
-      window.products = products;
+      products = window.products;
       try { saveData(); } catch(e) {}
     }
 
@@ -1665,6 +1669,9 @@ function renderDashboard() {
   if (!el) return;
 
   const list = getDashboardProducts();
+  
+  // DEBUG — aparece no console do navegador
+  console.log('[Dashboard] products:', products?.length, '| window.products:', window.products?.length, '| list:', list?.length);
 
   const today = new Date();
   today.setHours(0,0,0,0);
@@ -1831,7 +1838,8 @@ function deleteProduct(id) {
   const p = products.find(p => p.id === id);
   if (!p) return;
   if (!confirm(`Excluir "${p.name}"?`)) return;
-  products = products.filter(p => p.id !== id);
+  window.products = products.filter(p => p.id !== id);
+  products = window.products;
   saveData();
   // Remover do Firebase também
   if (window._currentUser && typeof db !== 'undefined' && p.cloudId) {
@@ -1942,7 +1950,8 @@ function importJSON(input) {
     try {
       const data = JSON.parse(e.target.result);
       if (!Array.isArray(data)) throw new Error();
-      products = [...products, ...data];
+      window.products = [...products, ...data];
+      products = window.products;
       saveData();
       showToast(data.length + ' produtos importados!');
     } catch { showToast('Arquivo inválido'); }
