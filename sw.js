@@ -1,4 +1,4 @@
-const CACHE = 'valifast-v8';
+const CACHE = 'valifast-v9';
 const ASSETS = ['/', '/index.html'];
 
 self.addEventListener('install', e => {

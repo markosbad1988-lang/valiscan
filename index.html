@@ -910,7 +910,9 @@ auth.onAuthStateChanged(async user => {
   }
 
   try { updatePlanBadge(); } catch(e) {}
-  showAppAfterLogin();
+
+  // Carrega produtos ANTES de mostrar o app
+  showAuthGate('Carregando seus produtos...');
 
   try {
     await loadFromCloud();
@@ -925,6 +927,9 @@ auth.onAuthStateChanged(async user => {
       products = window.products;
     }
   }
+
+  // Só mostra o app depois que os produtos estão prontos
+  showAppAfterLogin();
 
   try { renderDashboard(); } catch(e) { console.error('Dashboard:', e); }
   try { renderList(); } catch(e) { console.error('Lista:', e); }
