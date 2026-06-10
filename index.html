@@ -396,7 +396,7 @@
   .mini-table-row span { color: var(--text-muted); }
 
 
-  /* ── VALIFAST V28 - DASHBOARD ESTÁVEL SEM VALORES ── */
+  /* ── VALIFAST V29 - ESTÁVEL: LOGIN + DASHBOARD SEM VALORES ── */
   .dashboard-hero {
     background: linear-gradient(135deg, var(--green-900), var(--green-700));
     color: #fff;
@@ -415,11 +415,7 @@
     overflow: hidden;
     margin-top: 10px;
   }
-  .plan-progress > div {
-    height: 100%;
-    background: #fff;
-    border-radius: 999px;
-  }
+  .plan-progress > div { height: 100%; background: #fff; border-radius: 999px; }
   .dashboard-block {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -655,7 +651,7 @@ limiteProdutos: 250 ou 999999
       <div class="card" style="margin-top:4px">
         <div class="card-title">Sobre o ValiFast</div>
         <p style="font-size:13px;color:var(--text-muted);line-height:1.6">
-          Versão 2.8 · SaaS · Dados salvos na nuvem por usuário.<br>
+          Versão 2.9 · SaaS · Dados salvos na nuvem por usuário.<br>
           Planos: Demonstração, Individual e Profissional.
         </p>
       </div>
@@ -826,9 +822,8 @@ auth.onAuthStateChanged(async user => {
   if (!user) {
     window._currentUser = null;
     window._userProfile = null;
-    products = [];
-    renderDashboard();
-    renderList();
+    try { products = []; } catch(e) {}
+    try { renderDashboard(); renderList(); } catch(e) {}
 
     if (loginBtn) loginBtn.style.display = 'none';
     if (badge) badge.style.display = 'none';
@@ -847,15 +842,38 @@ auth.onAuthStateChanged(async user => {
   }
 
   showAuthGate('Carregando sua conta...');
+
   try {
     window._userProfile = await loadUserProfile(user);
-    updatePlanBadge();
-    await loadFromCloud();
-    showAppAfterLogin();
   } catch(e) {
-    console.error('Erro ao carregar perfil:', e);
-    showAuthGate('Erro ao carregar sua conta. Verifique o Firebase.');
+    console.warn('Perfil não carregou. Usando perfil local:', e);
+    window._userProfile = {
+      uid: user.uid,
+      nome: user.displayName || user.email?.split('@')[0] || 'Usuário',
+      email: user.email || '',
+      plano: 'demo',
+      limiteProdutos: 10
+    };
   }
+
+  try { updatePlanBadge(); } catch(e) {}
+  showAppAfterLogin();
+
+  try {
+    await loadFromCloud();
+  } catch(e) {
+    console.warn('Produtos não carregaram da nuvem. Usando local:', e);
+    try {
+      const local = localStorage.getItem(userLocalKey());
+      products = local ? JSON.parse(local) : [];
+    } catch(localErr) {
+      products = [];
+    }
+  }
+
+  try { renderDashboard(); } catch(e) { console.error('Dashboard:', e); }
+  try { renderList(); } catch(e) { console.error('Lista:', e); }
+  try { updatePlanBadge(); } catch(e) {}
 });
 
 async function handleLogin() {
@@ -999,27 +1017,28 @@ async function loadFromCloud() {
   if (!window._currentUser) return;
 
   try {
-    showToast('☁️ Carregando seus produtos...');
-
     const snap = await db.collection('products')
       .where('uid', '==', window._currentUser.uid)
       .get();
 
     products = snap.docs.map(d => ({ ...d.data(), cloudId: d.id }));
-
     saveData();
-    renderDashboard();
-    renderList();
-    renderDashboard();
-    updatePlanBadge();
 
-    showToast('✅ ' + products.length + ' produtos carregados!');
   } catch(e) {
-    console.warn('Falha ao carregar da nuvem. Mantendo dados locais:', e);
-    renderDashboard();
-    renderList();
+    console.warn('Erro ao carregar produtos da nuvem. Mantendo dados locais:', e);
+    try {
+      const local = localStorage.getItem(userLocalKey());
+      products = local ? JSON.parse(local) : [];
+    } catch(localErr) {
+      products = [];
+    }
   }
+
+  renderDashboard();
+  renderList();
+  updatePlanBadge();
 }
+
 </script>
 
 <!-- ZXing fallback (jsDelivr é mais estável que unpkg) -->
@@ -1483,6 +1502,8 @@ function saveProduct() {
   products.push(entry);
   saveData();
   saveToCloud(entry);
+  renderDashboard();
+  renderList();
 
   document.getElementById('product-form').style.display = 'none';
   document.getElementById('ean-input').value = '';
@@ -1536,7 +1557,6 @@ function escapeHtml(text) {
   }[m]));
 }
 
-
 function renderDashboard() {
   const el = document.getElementById('view-dash');
   if (!el) return;
@@ -1555,6 +1575,7 @@ function renderDashboard() {
   };
 
   const total = list.length;
+
   const expired = list.filter(p => {
     const days = daysUntil(p.validade);
     return days !== null && days < 0;
