@@ -652,6 +652,7 @@ limiteProdutos: 250 ou 999999
         <button class="filter-btn" data-filter="expired" onclick="setFilter(this)">Vencidos</button>
         <button class="filter-btn" data-filter="warning" onclick="setFilter(this)">30 dias</button>
         <button class="filter-btn" data-filter="ok" onclick="setFilter(this)">OK</button>
+        <button class="filter-btn" onclick="deleteAllFiltered()" style="margin-left:auto;color:var(--red-400);border-color:var(--red-400);">🗑️ Apagar todos</button>
       </div>
       <div id="item-list" class="item-list"></div>
     </div>
@@ -1855,7 +1856,46 @@ function deleteProduct(id) {
   renderDashboard();
   showToast('🗑️ ' + p.name + ' excluído');
 }
-function exportCSV() {
+function deleteAllFiltered() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+
+  // Determina quais produtos estão visíveis no filtro atual
+  const toDelete = products.filter(p => {
+    if (q && !p.name.toLowerCase().includes(q) && !p.ean.includes(q)) return false;
+    if (activeFilter === 'all') return true;
+    if (activeFilter === 'expired') return getStatus(p.validade) === 'expired';
+    if (activeFilter === 'warning') return getStatus(p.validade) === 'danger';
+    if (activeFilter === 'ok') return getStatus(p.validade) === 'ok';
+    return true;
+  });
+
+  if (!toDelete.length) { showToast('Nenhum produto para apagar'); return; }
+
+  const label = activeFilter === 'all' ? 'todos os produtos' :
+                activeFilter === 'expired' ? 'todos os vencidos' :
+                activeFilter === 'warning' ? 'todos os que vencem em 30 dias' :
+                'todos os produtos OK';
+
+  if (!confirm(`Apagar ${label}? (${toDelete.length} produto${toDelete.length > 1 ? 's' : ''})\n\nEsta ação não pode ser desfeita.`)) return;
+
+  const idsToDelete = new Set(toDelete.map(p => p.id));
+
+  // Remove do Firebase
+  if (window._currentUser && typeof db !== 'undefined') {
+    toDelete.forEach(p => {
+      if (p.cloudId) {
+        db.collection('products').doc(p.cloudId).delete().catch(e => console.error(e));
+      }
+    });
+  }
+
+  window.products = products.filter(p => !idsToDelete.has(p.id));
+  products = window.products;
+  saveData();
+  renderList();
+  renderDashboard();
+  showToast(`🗑️ ${toDelete.length} produto${toDelete.length > 1 ? 's' : ''} apagado${toDelete.length > 1 ? 's' : ''}`);
+}
   if (!products.length) { showToast('Nenhum produto para exportar'); return; }
   const headers = ['Nome','EAN','Validade','Lote','Quantidade','Local','Status','Dias'];
   const rows = products.map(p => {

@@ -1,4 +1,4 @@
-const CACHE = 'valifast-v10';
+const CACHE = 'valifast-v11';
 const ASSETS = ['/', '/index.html'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).catch(() => {}));
