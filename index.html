@@ -1129,8 +1129,23 @@ function navigate(view, btn) {
   document.querySelectorAll('#bottomnav button').forEach(b => b.classList.remove('active'));
   document.getElementById('view-' + view).classList.add('active');
   btn.classList.add('active');
-  if (view === 'dash') renderDashboard();
-  if (view === 'list') renderList();
+  if (view === 'dash') {
+    if (window._currentUser && (!window.products || window.products.length === 0)) {
+      // Mostra loading e recarrega do Firestore
+      const el = document.getElementById('view-dash');
+      if (el) el.innerHTML = '<div style="text-align:center;padding:40px;color:#888;">⏳ Carregando produtos...</div>';
+      loadFromCloud().then(() => renderDashboard()).catch(() => renderDashboard());
+    } else {
+      renderDashboard();
+    }
+  }
+  if (view === 'list') {
+    if (window._currentUser && (!window.products || window.products.length === 0)) {
+      loadFromCloud().then(() => renderList()).catch(() => renderList());
+    } else {
+      renderList();
+    }
+  }
 }
 
 // ── CAMERA & SCAN ──
