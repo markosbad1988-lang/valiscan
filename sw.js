@@ -1,4 +1,4 @@
-const CACHE = 'valifast-v29-estavel';
+const CACHE = 'valifast-v30-dashboard-sync';
 const ASSETS = [
   '/',
   '/index.html',

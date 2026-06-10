@@ -440,6 +440,51 @@
   .critical-days.danger { color: var(--red-400); font-weight: 700; }
   .critical-days.warning { color: var(--amber-400); font-weight: 700; }
 
+
+  /* ── VALIFAST V30 - DASHBOARD SINCRONIZADO ── */
+  .dashboard-hero {
+    background: linear-gradient(135deg, var(--green-900), var(--green-700));
+    color: #fff;
+    border-radius: var(--radius);
+    padding: 18px;
+    border: 1px solid rgba(255,255,255,.12);
+    margin-bottom: 12px;
+  }
+  .dashboard-hero h2 { font-size: 22px; margin-bottom: 6px; }
+  .dashboard-hero p { opacity: .9; font-size: 13px; line-height: 1.4; }
+  .plan-progress {
+    width: 100%;
+    height: 9px;
+    background: rgba(255,255,255,.22);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 10px;
+  }
+  .plan-progress > div { height: 100%; background: #fff; border-radius: 999px; }
+  .dashboard-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-top: 12px;
+  }
+  .dashboard-block h3 { font-size: 15px; margin-bottom: 10px; }
+  .critical-list { display: grid; gap: 8px; }
+  .critical-item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px;
+    background: var(--bg);
+    font-size: 13px;
+  }
+  .critical-item strong { color: var(--text); }
+  .critical-item span { color: var(--text-muted); }
+  .critical-days.danger { color: var(--red-400); font-weight: 700; }
+  .critical-days.warning { color: var(--amber-400); font-weight: 700; }
+
 </style>
 </head>
 <body>
@@ -651,7 +696,7 @@ limiteProdutos: 250 ou 999999
       <div class="card" style="margin-top:4px">
         <div class="card-title">Sobre o ValiFast</div>
         <p style="font-size:13px;color:var(--text-muted);line-height:1.6">
-          Versão 2.9 · SaaS · Dados salvos na nuvem por usuário.<br>
+          Versão 3.0 · SaaS · Dados salvos na nuvem por usuário.<br>
           Planos: Demonstração, Individual e Profissional.
         </p>
       </div>
@@ -684,7 +729,15 @@ limiteProdutos: 250 ou 999999
 <div id="toast"></div>
 
 <!-- Firebase SDK compat (funciona sem type=module) -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">
+setInterval(function(){
+  const dash = document.getElementById('view-dash');
+  if (dash && dash.classList && dash.classList.contains('active')) {
+    renderDashboard();
+  }
+}, 1200);
+
+</script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script>
@@ -1022,6 +1075,7 @@ async function loadFromCloud() {
       .get();
 
     products = snap.docs.map(d => ({ ...d.data(), cloudId: d.id }));
+    window.products = products;
     saveData();
 
   } catch(e) {
@@ -1557,11 +1611,75 @@ function escapeHtml(text) {
   }[m]));
 }
 
+
+function getDashboardProducts() {
+  try {
+    if (Array.isArray(products) && products.length) return products;
+  } catch(e) {}
+
+  try {
+    if (Array.isArray(window.products) && window.products.length) return window.products;
+  } catch(e) {}
+
+  try {
+    const user = window._currentUser;
+    if (typeof userLocalKey === 'function') {
+      const raw = localStorage.getItem(userLocalKey());
+      const parsed = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(parsed) && parsed.length) return parsed;
+    }
+
+    if (user && user.uid) {
+      const keys = Object.keys(localStorage);
+      for (const k of keys) {
+        if (k.includes(user.uid) || k.includes('valifast')) {
+          try {
+            const parsed = JSON.parse(localStorage.getItem(k));
+            if (Array.isArray(parsed) && parsed.length) return parsed;
+          } catch(e) {}
+        }
+      }
+    }
+  } catch(e) {}
+
+  try {
+    if (Array.isArray(products)) return products;
+  } catch(e) {}
+
+  return [];
+}
+
+async function syncDashboardProductsFromCloud() {
+  if (!window._currentUser || !window.db) return getDashboardProducts();
+
+  try {
+    const snap = await db.collection('products')
+      .where('uid', '==', window._currentUser.uid)
+      .get();
+
+    const cloudProducts = snap.docs.map(d => ({ ...d.data(), cloudId: d.id }));
+
+    if (Array.isArray(cloudProducts)) {
+      products = cloudProducts;
+      window.products = products;
+      window.products = cloudProducts;
+      window.products = products;
+      try { saveData(); } catch(e) {}
+    }
+
+    return cloudProducts;
+  } catch(e) {
+    console.warn('Dashboard: falha ao sincronizar Firestore, usando lista local.', e);
+    return getDashboardProducts();
+  }
+}
+
 function renderDashboard() {
   const el = document.getElementById('view-dash');
   if (!el) return;
 
-  const list = Array.isArray(products) ? products : [];
+  const list = getDashboardProducts();
+
   const today = new Date();
   today.setHours(0,0,0,0);
 
@@ -1680,6 +1798,7 @@ function renderDashboard() {
 }
 
 
+
 // ── LIST VIEW ──
 function setFilter(btn) {
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -1689,6 +1808,8 @@ function setFilter(btn) {
 }
 
 function renderList() {
+  try { window.products = products; } catch(e) {}
+
   const q = document.getElementById('search-input').value.toLowerCase();
   let filtered = products.filter(p => {
     if (q && !p.name.toLowerCase().includes(q) && !p.ean.includes(q)) return false;
