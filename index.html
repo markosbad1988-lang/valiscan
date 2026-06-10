@@ -875,7 +875,7 @@ auth.onAuthStateChanged(async user => {
   if (!user) {
     window._currentUser = null;
     window._userProfile = null;
-    try { window.products = []; products = window.products; } catch(e) {}
+    try { products = []; } catch(e) {}
     try { renderDashboard(); renderList(); } catch(e) {}
 
     if (loginBtn) loginBtn.style.display = 'none';
@@ -910,9 +910,7 @@ auth.onAuthStateChanged(async user => {
   }
 
   try { updatePlanBadge(); } catch(e) {}
-
-  // Carrega produtos ANTES de mostrar o app
-  showAuthGate('Carregando seus produtos...');
+  showAppAfterLogin();
 
   try {
     await loadFromCloud();
@@ -920,16 +918,11 @@ auth.onAuthStateChanged(async user => {
     console.warn('Produtos não carregaram da nuvem. Usando local:', e);
     try {
       const local = localStorage.getItem(userLocalKey());
-      window.products = local ? JSON.parse(local) : [];
-      products = window.products;
+      products = local ? JSON.parse(local) : [];
     } catch(localErr) {
-      window.products = [];
-      products = window.products;
+      products = [];
     }
   }
-
-  // Só mostra o app depois que os produtos estão prontos
-  showAppAfterLogin();
 
   try { renderDashboard(); } catch(e) { console.error('Dashboard:', e); }
   try { renderList(); } catch(e) { console.error('Lista:', e); }
@@ -1036,8 +1029,7 @@ function traduzAuthError(code) {
 
 async function handleLogout() {
   await auth.signOut();
-  window.products = [];
-  products = window.products;
+  products = [];
   renderDashboard();
   renderList();
   showAuthGate('Crie sua conta e teste com até 10 produtos.');
@@ -1075,32 +1067,24 @@ async function saveToCloud(entry) {
 }
 
 async function loadFromCloud() {
-  if (!window._currentUser) { console.log('[loadFromCloud] sem usuário logado'); return; }
-  console.log('[loadFromCloud] uid:', window._currentUser.uid);
+  if (!window._currentUser) return;
 
   try {
     const snap = await db.collection('products')
       .where('uid', '==', window._currentUser.uid)
       .get();
 
-    const loaded = snap.docs.map(d => ({ ...d.data(), cloudId: d.id }));
-    console.log('[loadFromCloud] docs no Firestore:', snap.size, '| produtos mapeados:', loaded.length);
-    // Atualiza AMBAS as referências para garantir sincronização entre scripts
-    window.products = loaded;
-    products = window.products;
-    console.log('[loadFromCloud] window.products após atribuição:', window.products.length);
+    products = snap.docs.map(d => ({ ...d.data(), cloudId: d.id }));
+    window.products = products;
     saveData();
 
   } catch(e) {
     console.warn('Erro ao carregar produtos da nuvem. Mantendo dados locais:', e);
     try {
       const local = localStorage.getItem(userLocalKey());
-      const parsed = local ? JSON.parse(local) : [];
-      window.products = parsed;
-      products = window.products;
+      products = local ? JSON.parse(local) : [];
     } catch(localErr) {
-      window.products = [];
-      products = window.products;
+      products = [];
     }
   }
 
@@ -1116,9 +1100,7 @@ async function loadFromCloud() {
 
 <script>
 // ── STATE ──
-// IMPORTANTE: products declarado em window para compartilhar entre blocos de script
-if (!window.products) window.products = [];
-let products = window.products; // referência ao mesmo array
+let products = [];
 let currentEAN = null;
 let activeFilter = 'all';
 let codeReader = null;
@@ -1134,23 +1116,8 @@ function navigate(view, btn) {
   document.querySelectorAll('#bottomnav button').forEach(b => b.classList.remove('active'));
   document.getElementById('view-' + view).classList.add('active');
   btn.classList.add('active');
-  if (view === 'dash') {
-    if (window._currentUser && (!window.products || window.products.length === 0)) {
-      // Mostra loading e recarrega do Firestore
-      const el = document.getElementById('view-dash');
-      if (el) el.innerHTML = '<div style="text-align:center;padding:40px;color:#888;">⏳ Carregando produtos...</div>';
-      loadFromCloud().then(() => renderDashboard()).catch(() => renderDashboard());
-    } else {
-      renderDashboard();
-    }
-  }
-  if (view === 'list') {
-    if (window._currentUser && (!window.products || window.products.length === 0)) {
-      loadFromCloud().then(() => renderList()).catch(() => renderList());
-    } else {
-      renderList();
-    }
-  }
+  if (view === 'dash') renderDashboard();
+  if (view === 'list') renderList();
 }
 
 // ── CAMERA & SCAN ──
@@ -1587,7 +1554,6 @@ function saveProduct() {
   };
 
   products.push(entry);
-  window.products = products; // sincroniza referência global
   saveData();
   saveToCloud(entry);
   renderDashboard();
@@ -1647,17 +1613,39 @@ function escapeHtml(text) {
 
 
 function getDashboardProducts() {
-  // Fonte única de verdade — sempre window.products
-  if (Array.isArray(window.products) && window.products.length > 0) return window.products;
-  if (Array.isArray(products) && products.length > 0) return products;
-  // Fallback localStorage
   try {
+    if (Array.isArray(products) && products.length) return products;
+  } catch(e) {}
+
+  try {
+    if (Array.isArray(window.products) && window.products.length) return window.products;
+  } catch(e) {}
+
+  try {
+    const user = window._currentUser;
     if (typeof userLocalKey === 'function') {
       const raw = localStorage.getItem(userLocalKey());
       const parsed = raw ? JSON.parse(raw) : [];
       if (Array.isArray(parsed) && parsed.length) return parsed;
     }
+
+    if (user && user.uid) {
+      const keys = Object.keys(localStorage);
+      for (const k of keys) {
+        if (k.includes(user.uid) || k.includes('valifast')) {
+          try {
+            const parsed = JSON.parse(localStorage.getItem(k));
+            if (Array.isArray(parsed) && parsed.length) return parsed;
+          } catch(e) {}
+        }
+      }
+    }
   } catch(e) {}
+
+  try {
+    if (Array.isArray(products)) return products;
+  } catch(e) {}
+
   return [];
 }
 
@@ -1672,8 +1660,10 @@ async function syncDashboardProductsFromCloud() {
     const cloudProducts = snap.docs.map(d => ({ ...d.data(), cloudId: d.id }));
 
     if (Array.isArray(cloudProducts)) {
+      products = cloudProducts;
+      window.products = products;
       window.products = cloudProducts;
-      products = window.products;
+      window.products = products;
       try { saveData(); } catch(e) {}
     }
 
@@ -1689,9 +1679,6 @@ function renderDashboard() {
   if (!el) return;
 
   const list = getDashboardProducts();
-  
-  // DEBUG — aparece no console do navegador
-  console.log('[Dashboard] products:', products?.length, '| window.products:', window.products?.length, '| list:', list?.length);
 
   const today = new Date();
   today.setHours(0,0,0,0);
@@ -1744,9 +1731,6 @@ function renderDashboard() {
   const usadosTxt = total + ' de ' + limiteTxt;
 
   el.innerHTML = `
-    <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:10px 14px;font-size:12px;color:#333;margin-bottom:8px;">
-      🔍 DEBUG — products: ${products?.length ?? 'undef'} | window.products: ${window.products?.length ?? 'undef'} | list: ${list?.length ?? 'undef'} | uid: ${window._currentUser?.uid?.slice(0,8) ?? 'null'}
-    </div>
     <div class="dashboard-hero">
       <h2>Resumo do ValiFast</h2>
       <p>Plano atual: <strong>${String(plano).toUpperCase()}</strong> • Uso: <strong>${usadosTxt}</strong></p>
@@ -1785,7 +1769,7 @@ function renderDashboard() {
           <div class="critical-item">
             <div>
               <strong>${escapeHtml(p.name || 'Produto sem nome')}</strong><br>
-              <span>EAN ${escapeHtml(p.ean || '')} • ${formatValidity(p.validade)} • Qtd ${p.qty || p.quantidade || 1}</span>
+              <span>EAN ${escapeHtml(p.ean || '')} • ${formatValidade(p.validade)} • Qtd ${p.qty || p.quantidade || 1}</span>
             </div>
             <div class="critical-days ${p.days < 0 ? 'danger' : 'warning'}">
               ${p.days < 0 ? 'Vencido' : p.days + ' dias'}
@@ -1800,12 +1784,12 @@ function renderDashboard() {
       <div class="item-list">
         ${recent.length ? recent.map(p => `
           <div class="item-row">
-            <div class="item-dot ${getStatusClass(p.validade)}"></div>
+            <div class="item-dot ${getStatus(p.validade)}"></div>
             <div class="item-info">
               <div class="item-name">${escapeHtml(p.name || 'Produto sem nome')}</div>
               <div class="item-sub">EAN ${escapeHtml(p.ean || '')} • Qtd ${p.qty || p.quantidade || 1}${p.local ? ' • ' + escapeHtml(p.local) : ''}</div>
             </div>
-            <div class="item-val ${getStatusClass(p.validade)}">${formatValidity(p.validade)}</div>
+            <div class="item-val ${getStatus(p.validade)}">${formatValidade(p.validade)}</div>
           </div>
         `).join('') : `<div class="empty-state"><div class="empty-icon">📦</div><p>Nenhum produto cadastrado ainda.</p></div>`}
       </div>
@@ -1861,8 +1845,7 @@ function deleteProduct(id) {
   const p = products.find(p => p.id === id);
   if (!p) return;
   if (!confirm(`Excluir "${p.name}"?`)) return;
-  window.products = products.filter(p => p.id !== id);
-  products = window.products;
+  products = products.filter(p => p.id !== id);
   saveData();
   // Remover do Firebase também
   if (window._currentUser && typeof db !== 'undefined' && p.cloudId) {
@@ -1973,8 +1956,7 @@ function importJSON(input) {
     try {
       const data = JSON.parse(e.target.result);
       if (!Array.isArray(data)) throw new Error();
-      window.products = [...products, ...data];
-      products = window.products;
+      products = [...products, ...data];
       saveData();
       showToast(data.length + ' produtos importados!');
     } catch { showToast('Arquivo inválido'); }
