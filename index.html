@@ -623,7 +623,7 @@ limiteProdutos: 250 ou 999999
       <div class="card" style="margin-top:4px">
         <div class="card-title">Sobre o ValiFast</div>
         <p style="font-size:13px;color:var(--text-muted);line-height:1.6">
-          Versão 2.5 · SaaS · Dados salvos na nuvem por usuário.<br>
+          Versão 2.6 · SaaS · Dados salvos na nuvem por usuário.<br>
           Planos: Demonstração, Individual e Profissional.
         </p>
       </div>
@@ -690,8 +690,6 @@ function vfRenderDashboard(){
       <div class="stat-card danger"><div class="stat-label">Vencidos</div><div class="stat-value">${expired}</div></div>
       <div class="stat-card warning"><div class="stat-label">Vencem em 30 dias</div><div class="stat-value">${warning30}</div></div>
       <div class="stat-card ok"><div class="stat-label">Dentro da validade</div><div class="stat-value">${ok}</div></div>
-      <div class="vf-money-card"><div class="vf-money-label">Valor em estoque</div><div class="vf-money-value green">${vfMoney(totalStockValue)}</div><div class="vf-money-sub">Baseado em quantidade e valor unitário informados.</div></div>
-      <div class="vf-money-card"><div class="vf-money-label">Produtos críticos</div><div class="vf-money-value red">${vfMoney(riskValue)}</div><div class="vf-money-sub">Vencidos ou vencendo em até 30 dias.</div></div>
       <div class="vf-list-card vf-wide"><h3>Produtos críticos</h3><div class="vf-critical-list">${critical.length?critical.map(p=>`<div class="vf-critical-item"><div><strong>${vfEsc(p.name||'Produto sem nome')}</strong><br><span>EAN ${vfEsc(p.ean||'')} • ${vfFmtValidity(p.validade)}</span></div><div class="vf-critical-days ${p.days<0?'danger':'warning'}">${p.days<0?'Vencido':p.days+' dias'}</div></div>`).join(''):`<div class="empty-state"><div class="empty-icon">✅</div><p>Nenhum produto crítico.</p></div>`}</div></div>
       <div class="vf-list-card vf-wide"><h3>Últimos cadastrados</h3><div class="item-list">${recent.length?recent.map(p=>`<div class="item-row"><div class="item-dot ${vfStatusClass(p.validade)}"></div><div class="item-info"><div class="item-name">${vfEsc(p.name||'Produto sem nome')}</div><div class="item-sub">EAN ${vfEsc(p.ean||'')} • Qtd ${p.qty||p.quantidade||1}${p.local?' • '+vfEsc(p.local):''}</div></div><div class="item-val ${vfStatusClass(p.validade)}">${vfFmtValidity(p.validade)}</div></div>`).join(''):`<div class="empty-state"><div class="empty-icon">📦</div><p>Nenhum produto cadastrado ainda.</p></div>`}</div></div>
     </div>`;
