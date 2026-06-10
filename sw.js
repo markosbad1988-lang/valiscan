@@ -1,4 +1,4 @@
-const CACHE = 'valifast-v26-dashboard-sem-valores-ok';
+const CACHE = 'valifast-v28-dashboard-stable';
 const ASSETS = [
   '/',
   '/index.html',
