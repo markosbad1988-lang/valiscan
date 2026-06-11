@@ -290,6 +290,22 @@
   </div>
 </div>
 
+<!-- SUBSCRIPTION EXPIRED MODAL -->
+<div id="subscription-modal" class="modal-overlay">
+  <div class="modal-card" style="text-align:center;">
+    <div style="font-size:48px;margin-bottom:12px;">⏰</div>
+    <h2 style="color:#B71C1C;margin-bottom:8px;">Assinatura Vencida</h2>
+    <p id="sub-expired-msg" class="modal-sub" style="margin-bottom:16px;"></p>
+    <div style="background:#FFF3E0;border:1px solid #FFCC80;border-radius:12px;padding:14px;margin-bottom:16px;font-size:13px;color:#E65100;">
+      ⚠️ Seus produtos continuam salvos. Renove para continuar adicionando e usando todos os recursos.
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button class="modal-btn primary" onclick="closeSubscriptionModal();openPlansModal();">🔄 Renovar agora</button>
+      <button class="modal-btn secondary" onclick="closeSubscriptionModal()">Usar plano Demo por enquanto</button>
+    </div>
+  </div>
+</div>
+
 <!-- EDIT MODAL -->
 <div id="edit-modal" class="modal-overlay">
   <div class="modal-card">
@@ -340,12 +356,17 @@
       <div class="account-label">Plano atual</div>
       <div class="account-value" id="acc-plano">—</div>
     </div>
+    <div class="account-section" id="acc-validade-section" style="display:none;">
+      <div class="account-label" id="acc-validade-label">Assinatura válida até</div>
+      <div class="account-value" id="acc-validade">—</div>
+    </div>
     <div class="account-section">
       <div class="account-label">Uso</div>
       <div class="account-value" id="acc-uso">—</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
-      <button class="modal-btn primary" onclick="openPlansModal();closeAccountModal();">🚀 Ver planos / Fazer upgrade</button>
+      <button class="modal-btn primary" id="acc-renovar-btn" style="display:none;" onclick="openPlansModal();closeAccountModal();">🔄 Renovar assinatura</button>
+      <button class="modal-btn primary" id="acc-upgrade-btn" onclick="openPlansModal();closeAccountModal();">🚀 Ver planos / Fazer upgrade</button>
       <button class="modal-btn secondary" onclick="showResetPasswordFromAccount()">🔑 Alterar senha</button>
       <button class="modal-btn danger" onclick="handleLogout();closeAccountModal();">Sair da conta</button>
       <button class="modal-btn secondary" onclick="closeAccountModal()">Fechar</button>
@@ -624,22 +645,6 @@ async function loadUserProfile(user) {
   return data;
 }
 
-function updatePlanBadge() {
-  const badgeId = 'plan-badge-top';
-  let badge = document.getElementById(badgeId);
-  const topbar = document.getElementById('topbar');
-  if (!topbar) return;
-  if (!badge) {
-    badge = document.createElement('span');
-    badge.id = badgeId;
-    badge.className = 'plan-badge';
-    topbar.appendChild(badge);
-  }
-  const plano = currentPlan();
-  const limite = currentLimit() === Infinity ? 'Ilimitado' : currentLimit() + ' produtos';
-  badge.textContent = plano.toUpperCase() + ' • ' + limite;
-}
-
 auth.onAuthStateChanged(async user => {
   window._currentUser = user;
   const loginBtn = document.getElementById('login-btn');
@@ -671,6 +676,7 @@ auth.onAuthStateChanged(async user => {
   }
 
   try { updatePlanBadge(); } catch(e) {}
+  try { checkSubscription(window._userProfile); } catch(e) {}
   showAppAfterLogin();
 
   try {
@@ -1212,9 +1218,55 @@ function openAccountModal() {
   const profile = window._userProfile || {};
   document.getElementById('acc-nome').textContent = profile.nome || user.displayName || '—';
   document.getElementById('acc-email').textContent = user.email || '—';
+
   const plano = currentPlan();
   const limite = currentLimit();
-  document.getElementById('acc-plano').textContent = plano.charAt(0).toUpperCase() + plano.slice(1);
+  const planoNome = plano.charAt(0).toUpperCase() + plano.slice(1);
+
+  // Mostrar validade da assinatura
+  const validadeSection = document.getElementById('acc-validade-section');
+  const validadeLabel   = document.getElementById('acc-validade-label');
+  const validadeVal     = document.getElementById('acc-validade');
+  const renovarBtn      = document.getElementById('acc-renovar-btn');
+  const upgradeBtn      = document.getElementById('acc-upgrade-btn');
+
+  if (profile.vencimentoAssinatura && plano !== 'demo' && plano !== 'admin') {
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    const venc = new Date(profile.vencimentoAssinatura);
+    const dias = Math.ceil((venc - hoje) / 86400000);
+    const vencStr = venc.toLocaleDateString('pt-BR');
+
+    validadeSection.style.display = 'block';
+
+    if (dias < 0) {
+      validadeLabel.textContent = 'Assinatura';
+      validadeVal.textContent = 'Vencida em ' + vencStr;
+      validadeVal.style.color = '#B71C1C';
+      document.getElementById('acc-plano').textContent = planoNome + ' (vencido)';
+      renovarBtn.style.display = 'block';
+      upgradeBtn.style.display = 'none';
+    } else if (dias <= 5) {
+      validadeLabel.textContent = 'Assinatura válida até';
+      validadeVal.textContent = vencStr + ' (' + dias + ' dia(s) restantes!)';
+      validadeVal.style.color = '#E65100';
+      document.getElementById('acc-plano').textContent = planoNome;
+      renovarBtn.style.display = 'block';
+      upgradeBtn.style.display = 'none';
+    } else {
+      validadeLabel.textContent = 'Assinatura válida até';
+      validadeVal.textContent = vencStr + ' (' + dias + ' dias restantes)';
+      validadeVal.style.color = '#1BA873';
+      document.getElementById('acc-plano').textContent = planoNome;
+      renovarBtn.style.display = 'none';
+      upgradeBtn.style.display = 'block';
+    }
+  } else {
+    validadeSection.style.display = 'none';
+    document.getElementById('acc-plano').textContent = plano === 'demo' ? 'Demonstração (10 produtos)' : planoNome;
+    renovarBtn.style.display = 'none';
+    upgradeBtn.style.display = 'block';
+  }
+
   document.getElementById('acc-uso').textContent = products.length + ' / ' + (limite === Infinity ? 'Ilimitado' : limite) + ' produtos';
   document.getElementById('account-modal').classList.add('show');
 }
@@ -1656,15 +1708,179 @@ async function liberarPlano(plano) {
   const user = window._currentUser;
   if (!user) return;
   const planoData = PLANOS[plano];
+
+  // Calcular vencimento: hoje + 30 dias
+  const agora = new Date();
+  const vencimento = new Date(agora);
+  vencimento.setDate(vencimento.getDate() + 30);
+
   try {
-    await db.collection('usuarios').doc(user.uid).set({ plano, limiteProdutos: planoData.limite, assinadoEm: new Date().toISOString(), atualizadoEm: new Date().toISOString() }, { merge: true });
-    window._userProfile = { ...window._userProfile, plano, limiteProdutos: planoData.limite };
+    await db.collection('usuarios').doc(user.uid).set({
+      plano,
+      limiteProdutos: planoData.limite,
+      assinadoEm: agora.toISOString(),
+      vencimentoAssinatura: vencimento.toISOString(),
+      atualizadoEm: agora.toISOString()
+    }, { merge: true });
+
+    window._userProfile = {
+      ...window._userProfile,
+      plano,
+      limiteProdutos: planoData.limite,
+      assinadoEm: agora.toISOString(),
+      vencimentoAssinatura: vencimento.toISOString()
+    };
+
     updatePlanBadge();
-    document.getElementById('pix-status').textContent = '✅ Pagamento confirmado! Plano ' + planoData.nome + ' ativado!';
+
+    const vencStr = vencimento.toLocaleDateString('pt-BR');
+    document.getElementById('pix-status').textContent =
+      '✅ Plano ' + planoData.nome + ' ativado até ' + vencStr + '!';
     document.getElementById('pix-status').className = 'pix-status pago';
-    showToast('🎉 Plano ' + planoData.nome + ' ativado!');
-    setTimeout(() => closePlansModal(), 3000);
+    showToast('🎉 Plano ' + planoData.nome + ' ativo até ' + vencStr + '!');
+    setTimeout(() => closePlansModal(), 3500);
+
   } catch(e) { console.error('Erro ao liberar plano:', e); }
+}
+
+// ── VERIFICAÇÃO DE ASSINATURA ──
+function checkSubscription(profile) {
+  if (!profile) return;
+  const plano = profile.plano || 'demo';
+
+  // Demo não tem vencimento
+  if (plano === 'demo' || plano === 'admin') return;
+
+  const venc = profile.vencimentoAssinatura;
+  if (!venc) return;
+
+  const hoje = new Date();
+  hoje.setHours(0,0,0,0);
+  const vencDate = new Date(venc);
+  vencDate.setHours(0,0,0,0);
+  const diffDias = Math.ceil((vencDate - hoje) / 86400000);
+
+  // Já venceu — rebaixar para demo
+  if (diffDias < 0) {
+    rebaixarParaDemo(profile, Math.abs(diffDias));
+    return;
+  }
+
+  // Vence hoje
+  if (diffDias === 0) {
+    showSubscriptionWarning('⚠️ Sua assinatura vence <strong>hoje</strong>! Renove para não perder o acesso.', 'danger');
+    return;
+  }
+
+  // Aviso 5 dias antes
+  if (diffDias <= 5) {
+    showSubscriptionWarning(
+      '⏰ Sua assinatura vence em <strong>' + diffDias + ' dia(s)</strong> (' +
+      vencDate.toLocaleDateString('pt-BR') + '). Renove para não perder o acesso.',
+      'warning'
+    );
+  }
+}
+
+async function rebaixarParaDemo(profile, diasVencido) {
+  const user = window._currentUser;
+  if (!user) return;
+
+  // Rebaixar no Firebase
+  try {
+    await db.collection('usuarios').doc(user.uid).set({
+      plano: 'demo',
+      limiteProdutos: 10,
+      atualizadoEm: new Date().toISOString()
+    }, { merge: true });
+  } catch(e) { console.warn('Erro ao rebaixar plano:', e); }
+
+  // Atualizar localmente
+  window._userProfile = { ...window._userProfile, plano: 'demo', limiteProdutos: 10 };
+  updatePlanBadge();
+
+  // Mostrar modal de assinatura vencida
+  const planoNome = (profile.plano || 'Pago').charAt(0).toUpperCase() +
+                    (profile.plano || 'pago').slice(1);
+  document.getElementById('sub-expired-msg').innerHTML =
+    'Seu plano <strong>' + planoNome + '</strong> venceu há ' + diasVencido +
+    ' dia(s). Você voltou para o plano Demo (10 produtos).';
+
+  setTimeout(() => {
+    document.getElementById('subscription-modal')?.classList.add('show');
+  }, 1500);
+}
+
+function showSubscriptionWarning(msg, type) {
+  // Remover aviso anterior se existir
+  document.getElementById('sub-warning-bar')?.remove();
+
+  const bar = document.createElement('div');
+  bar.id = 'sub-warning-bar';
+  bar.style.cssText = [
+    'background:' + (type === 'danger' ? '#B71C1C' : '#E65100'),
+    'color:#fff',
+    'padding:10px 16px',
+    'font-size:13px',
+    'display:flex',
+    'align-items:center',
+    'justify-content:space-between',
+    'gap:10px',
+    'flex-shrink:0'
+  ].join(';');
+  bar.innerHTML =
+    '<span>' + msg + '</span>' +
+    '<button onclick="openPlansModal()" style="background:#fff;color:' +
+    (type === 'danger' ? '#B71C1C' : '#E65100') +
+    ';border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Renovar</button>';
+
+  // Inserir abaixo do topbar
+  const app = document.getElementById('app');
+  const topbar = document.getElementById('topbar');
+  if (app && topbar) {
+    app.insertBefore(bar, topbar.nextSibling);
+  }
+}
+
+function closeSubscriptionModal() {
+  document.getElementById('subscription-modal')?.classList.remove('show');
+}
+
+// ── BADGE COM DIAS RESTANTES ──
+function updatePlanBadge() {
+  const badgeId = 'plan-badge-top';
+  let badge = document.getElementById(badgeId);
+  const topbar = document.getElementById('topbar');
+  if (!topbar) return;
+  if (!badge) {
+    badge = document.createElement('span');
+    badge.id = badgeId;
+    badge.className = 'plan-badge';
+    topbar.appendChild(badge);
+  }
+
+  const plano = currentPlan();
+  const limite = currentLimit() === Infinity ? 'Ilimitado' : currentLimit() + ' produtos';
+  const profile = window._userProfile;
+
+  let texto = plano.toUpperCase() + ' • ' + limite;
+
+  if (profile && profile.vencimentoAssinatura && plano !== 'demo' && plano !== 'admin') {
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    const venc = new Date(profile.vencimentoAssinatura); venc.setHours(0,0,0,0);
+    const dias = Math.ceil((venc - hoje) / 86400000);
+    if (dias >= 0) {
+      texto += ' • ' + dias + 'd restantes';
+      badge.style.background = dias <= 5
+        ? 'linear-gradient(135deg,#B71C1C,#E65100)'
+        : 'linear-gradient(135deg,#1BA873,#0D2040)';
+    } else {
+      texto += ' • VENCIDO';
+      badge.style.background = 'linear-gradient(135deg,#B71C1C,#7B0000)';
+    }
+  }
+
+  badge.textContent = texto;
 }
 
 function copiarPIX() {
