@@ -992,7 +992,9 @@ function getStatus(validade) {
   if (!validade) return 'ok';
   const today = new Date(); today.setHours(0,0,0,0);
   const parts = String(validade).split('-');
-  const exp = new Date(Number(parts[0]), Number(parts[1]), 0);
+  // Produto vence no último dia do mês ANTERIOR ao informado
+  // Ex: validade 07/2026 = vence em 30/06/2026 (deve ser retirado antes de 01/07)
+  const exp = new Date(Number(parts[0]), Number(parts[1]) - 1, 0);
   const diffDays = Math.ceil((exp - today) / 86400000);
   if (diffDays < 0) return 'expired';
   if (diffDays <= 30) return 'danger';
@@ -1009,7 +1011,8 @@ function getDaysLabel(validade) {
   if (!validade) return '—';
   const today = new Date(); today.setHours(0,0,0,0);
   const parts = String(validade).split('-');
-  const exp = new Date(Number(parts[0]), Number(parts[1]), 0);
+  // Último dia do mês anterior ao informado
+  const exp = new Date(Number(parts[0]), Number(parts[1]) - 1, 0);
   const d = Math.ceil((exp - today) / 86400000);
   if (d < 0) return 'Vencido há ' + Math.abs(d) + 'd';
   if (d === 0) return 'Vence hoje!';
@@ -1040,7 +1043,7 @@ function renderDashboard() {
     if (!validade) return null;
     const parts = String(validade).split('-');
     if (parts.length < 2) return null;
-    const d = new Date(Number(parts[0]), Number(parts[1]), 0);
+    const d = new Date(Number(parts[0]), Number(parts[1]) - 1, 0);
     if (isNaN(d.getTime())) return null;
     return Math.ceil((d - today) / (1000 * 60 * 60 * 24));
   };
