@@ -269,9 +269,9 @@
     </div>
     <div id="auth-status" class="auth-status">Crie sua conta e teste com até 10 produtos.</div>
     <div class="plans-preview">
-      <div class="plan-mini"><strong>Demonstração</strong><span>Até 10 produtos e relatório básico.</span></div>
-      <div class="plan-mini"><strong>Individual</strong><span>Até 250 produtos.</span></div>
-      <div class="plan-mini"><strong>Profissional</strong><span>Produtos ilimitados.</span></div>
+      <div class="plan-mini"><strong>Demonstração</strong><span>Até 100 produtos. Visualize relatórios gratuitamente.</span></div>
+      <div class="plan-mini"><strong>Individual</strong><span>Até 500 produtos + exportação de relatórios.</span></div>
+      <div class="plan-mini"><strong>Profissional</strong><span>Produtos ilimitados + todos os recursos.</span></div>
     </div>
   </div>
 </div>
@@ -281,11 +281,34 @@
   <div class="upgrade-card">
     <h2>Limite da demonstração atingido</h2>
     <p>Você já usou os 10 produtos do plano demonstração.</p>
-    <div class="upgrade-plan"><strong>Individual</strong><span>Até 250 produtos.</span></div>
-    <div class="upgrade-plan"><strong>Profissional</strong><span>Produtos ilimitados.</span></div>
+    <div class="upgrade-plan"><strong>Individual — R$ 19,90/mês</strong><span>Até 500 produtos + exportação de relatórios em PDF e Excel.</span></div>
+    <div class="upgrade-plan"><strong>Profissional — R$ 39,90/mês</strong><span>Produtos ilimitados + todos os recursos + prioridade no suporte.</span></div>
     <div class="upgrade-actions">
       <button class="btn btn-secondary" onclick="closeUpgradeModal()">Agora não</button>
       <button class="btn btn-primary" onclick="requestUpgrade()">Quero assinar</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT UPGRADE MODAL -->
+<div id="export-upgrade-modal" class="modal-overlay">
+  <div class="modal-card" style="text-align:center;">
+    <div style="font-size:48px;margin-bottom:12px;">📊</div>
+    <h2 style="color:#0D2040;margin-bottom:8px;">Recurso exclusivo</h2>
+    <p class="modal-sub" style="margin-bottom:16px;">A exportação de relatórios está disponível nos planos pagos.</p>
+    <div style="background:#f0fdf8;border:1px solid #A8E8CC;border-radius:12px;padding:14px;margin-bottom:16px;text-align:left;font-size:13px;">
+      <div style="margin-bottom:8px;color:#0D2040;font-weight:700;">No plano Demo você pode:</div>
+      <div style="color:#1BA873;margin-bottom:4px;">✅ Cadastrar até 100 produtos</div>
+      <div style="color:#1BA873;margin-bottom:4px;">✅ Ver o dashboard completo</div>
+      <div style="color:#1BA873;">✅ Visualizar os relatórios</div>
+      <div style="margin-top:10px;margin-bottom:4px;color:#0D2040;font-weight:700;">Faça upgrade e desbloqueie:</div>
+      <div style="color:#E65100;margin-bottom:4px;">🔓 Exportar relatório em PDF</div>
+      <div style="color:#E65100;margin-bottom:4px;">🔓 Exportar planilha Excel</div>
+      <div style="color:#E65100;">🔓 Backup e importação JSON</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button class="modal-btn primary" onclick="closeExportUpgradeModal();openPlansModal();">🚀 Ver planos — a partir de R$ 19,90/mês</button>
+      <button class="modal-btn secondary" onclick="closeExportUpgradeModal()">Agora não</button>
     </div>
   </div>
 </div>
@@ -385,12 +408,12 @@
           <div class="plan-name">Individual</div>
           <div style="font-size:11px;background:var(--green-700);color:#fff;padding:3px 8px;border-radius:999px;">Mais popular</div>
         </div>
-        <div class="plan-price">R$ 29,90 <span>/mês</span></div>
-        <div class="plan-desc">✓ Até 250 produtos · ✓ Todos os relatórios · ✓ Suporte</div>
+        <div class="plan-price">R$ 19,90 <span>/mês</span></div>
+        <div class="plan-desc">✓ Até 500 produtos · ✓ Exportar PDF e Excel · ✓ Suporte</div>
       </div>
       <div class="plan-card" id="plan-card-profissional" onclick="selectPlan('profissional')">
         <div class="plan-name">Profissional</div>
-        <div class="plan-price">R$ 59,90 <span>/mês</span></div>
+        <div class="plan-price">R$ 39,90 <span>/mês</span></div>
         <div class="plan-desc">✓ Produtos ilimitados · ✓ Prioridade no suporte · ✓ Múltiplos locais</div>
       </div>
       <div class="modal-actions">
@@ -569,10 +592,10 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-const PLAN_LIMITS = { demo: 10, individual: 250, profissional: Infinity, admin: Infinity };
+const PLAN_LIMITS = { demo: 100, individual: 500, profissional: Infinity, admin: Infinity };
 const PLANOS = {
-  individual:   { nome: 'Individual',   valor: 29.90, limite: 250 },
-  profissional: { nome: 'Profissional', valor: 59.90, limite: 999999 }
+  individual:   { nome: 'Individual',   valor: 19.90, limite: 500 },
+  profissional: { nome: 'Profissional', valor: 39.90, limite: 999999 }
 };
 
 // ── STATE ──
@@ -633,14 +656,14 @@ async function loadUserProfile(user) {
   const ref = db.collection('usuarios').doc(user.uid);
   const snap = await ref.get();
   if (!snap.exists) {
-    const profile = { uid: user.uid, nome: user.displayName || user.email?.split('@')[0] || '', email: user.email || '', plano: 'demo', limiteProdutos: 10, criadoEm: new Date().toISOString(), atualizadoEm: new Date().toISOString() };
+    const profile = { uid: user.uid, nome: user.displayName || user.email?.split('@')[0] || '', email: user.email || '', plano: 'demo', limiteProdutos: 100, criadoEm: new Date().toISOString(), atualizadoEm: new Date().toISOString() };
     await ref.set(profile, { merge: true });
     return profile;
   }
   const data = snap.data() || {};
   if (!data.plano) {
-    await ref.set({ plano: 'demo', limiteProdutos: 10, atualizadoEm: new Date().toISOString() }, { merge: true });
-    data.plano = 'demo'; data.limiteProdutos = 10;
+    await ref.set({ plano: 'demo', limiteProdutos: 100, atualizadoEm: new Date().toISOString() }, { merge: true });
+    data.plano = 'demo'; data.limiteProdutos = 100;
   }
   return data;
 }
@@ -1287,6 +1310,7 @@ async function showResetPasswordFromAccount() {
 
 // ── EXPORT ──
 function exportCSV() {
+  if (currentPlan() === 'demo') { openExportUpgradeModal(); return; }
   if (!products.length) { showToast('Nenhum produto para exportar'); return; }
   showToast('⏳ Gerando planilha...');
 
@@ -1484,6 +1508,7 @@ function exportCSV() {
   }
 }
 function exportPDF() {
+  if (currentPlan() === 'demo') { openExportUpgradeModal(); return; }
   if (!products.length) { showToast('Nenhum produto para exportar'); return; }
   const sorted = [...products].sort((a,b) => a.validade.localeCompare(b.validade));
   const now = new Date().toLocaleDateString('pt-BR');
@@ -1595,12 +1620,16 @@ table tbody td{padding:8px 10px;vertical-align:middle}
   showToast('Relatório PDF gerado!');
 }
 function exportJSON() {
+  if (currentPlan() === 'demo') { openExportUpgradeModal(); return; }
   if (!products.length) { showToast('Nenhum dado para exportar'); return; }
   downloadFile(JSON.stringify(products, null, 2), 'valiscan_backup_' + dateStr() + '.json', 'application/json');
   showToast('Backup exportado!');
 }
 
-function triggerImport() { document.getElementById('import-file').click(); }
+function triggerImport() {
+  if (currentPlan() === 'demo') { openExportUpgradeModal(); return; }
+  document.getElementById('import-file').click();
+}
 
 function importJSON(input) {
   const file = input.files[0];
@@ -1840,6 +1869,13 @@ function showSubscriptionWarning(msg, type) {
   if (app && topbar) {
     app.insertBefore(bar, topbar.nextSibling);
   }
+}
+
+function openExportUpgradeModal() {
+  document.getElementById('export-upgrade-modal')?.classList.add('show');
+}
+function closeExportUpgradeModal() {
+  document.getElementById('export-upgrade-modal')?.classList.remove('show');
 }
 
 function closeSubscriptionModal() {
