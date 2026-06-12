@@ -280,7 +280,7 @@
 <div id="upgrade-modal">
   <div class="upgrade-card">
     <h2>Limite da demonstração atingido</h2>
-    <p>Você já usou os 10 produtos do plano demonstração.</p>
+    <p>Você atingiu o limite de <strong>100 produtos</strong> do plano demonstração. Seus dados estão salvos — faça upgrade para continuar cadastrando.</p>
     <div class="upgrade-plan"><strong>Individual — R$ 19,90/mês</strong><span>Até 500 produtos + exportação de relatórios em PDF e Excel.</span></div>
     <div class="upgrade-plan"><strong>Profissional — R$ 39,90/mês</strong><span>Produtos ilimitados + todos os recursos + prioridade no suporte.</span></div>
     <div class="upgrade-actions">
@@ -646,7 +646,17 @@ function userLocalKey() {
 
 function currentPlan() { return (window._userProfile && window._userProfile.plano) || 'demo'; }
 function currentLimit() { return PLAN_LIMITS[currentPlan()] ?? 10; }
-function canAddProduct() { return products.length < currentLimit(); }
+function canAddProduct() {
+  const plano = currentPlan();
+  // No plano demo: verificar o total HISTÓRICO cadastrado (não o atual)
+  // Isso impede a brecha de apagar e recadastrar indefinidamente
+  if (plano === 'demo') {
+    const total = (window._userProfile && window._userProfile.totalCadastrado) || 0;
+    return total < currentLimit();
+  }
+  // Nos planos pagos: verificar o total atual (podem apagar e re-adicionar à vontade)
+  return products.length < currentLimit();
+}
 
 function openUpgradeModal() { document.getElementById('upgrade-modal')?.classList.add('show'); }
 function closeUpgradeModal() { document.getElementById('upgrade-modal')?.classList.remove('show'); }
@@ -695,7 +705,7 @@ auth.onAuthStateChanged(async user => {
   try {
     window._userProfile = await loadUserProfile(user);
   } catch(e) {
-    window._userProfile = { uid: user.uid, nome: user.displayName || user.email?.split('@')[0] || 'Usuário', email: user.email || '', plano: 'demo', limiteProdutos: 10 };
+    window._userProfile = { uid: user.uid, nome: user.displayName || user.email?.split('@')[0] || 'Usuário', email: user.email || '', plano: 'demo', limiteProdutos: 100 };
   }
 
   try { updatePlanBadge(); } catch(e) {}
@@ -744,7 +754,7 @@ async function registerWithEmail() {
     if (status) status.textContent = 'Criando conta...';
     const cred = await auth.createUserWithEmailAndPassword(email, password);
     await cred.user.updateProfile({ displayName: name });
-    await db.collection('usuarios').doc(cred.user.uid).set({ uid: cred.user.uid, nome: name, email, plano: 'demo', limiteProdutos: 10, criadoEm: new Date().toISOString(), atualizadoEm: new Date().toISOString() }, { merge: true });
+    await db.collection('usuarios').doc(cred.user.uid).set({ uid: cred.user.uid, nome: name, email, plano: 'demo', limiteProdutos: 100, totalCadastrado: 0, criadoEm: new Date().toISOString(), atualizadoEm: new Date().toISOString() }, { merge: true });
   } catch(e) {
     if (status) status.textContent = 'Erro ao criar conta: ' + traduzAuthError(e.code || e.message);
   }
@@ -979,6 +989,15 @@ function saveProduct() {
   products.push(entry);
   saveData();
   saveToCloud(entry);
+  // Incrementar contador histórico no Firebase (demo: impede brecha de apagar e recadastrar)
+  if (currentPlan() === 'demo' && window._currentUser) {
+    const novoTotal = ((window._userProfile && window._userProfile.totalCadastrado) || 0) + 1;
+    window._userProfile = { ...window._userProfile, totalCadastrado: novoTotal };
+    db.collection('usuarios').doc(window._currentUser.uid).set(
+      { totalCadastrado: novoTotal, atualizadoEm: new Date().toISOString() },
+      { merge: true }
+    ).catch(e => console.warn('Erro ao atualizar totalCadastrado:', e));
+  }
   renderDashboard();
   renderList();
   document.getElementById('product-form').style.display = 'none';
@@ -1293,7 +1312,14 @@ function openAccountModal() {
     upgradeBtn.style.display = 'block';
   }
 
-  document.getElementById('acc-uso').textContent = products.length + ' / ' + (limite === Infinity ? 'Ilimitado' : limite) + ' produtos';
+  // No demo, mostrar total histórico cadastrado
+  const planoAtual = currentPlan();
+  const totalHistorico = (window._userProfile && window._userProfile.totalCadastrado) || products.length;
+  const usoAtual = planoAtual === 'demo' ? totalHistorico : products.length;
+  const usoTexto = planoAtual === 'demo'
+    ? usoAtual + ' / ' + (limite === Infinity ? 'Ilimitado' : limite) + ' cadastrados (total histórico)'
+    : products.length + ' / ' + (limite === Infinity ? 'Ilimitado' : limite) + ' produtos ativos';
+  document.getElementById('acc-uso').textContent = usoTexto;
   document.getElementById('account-modal').classList.add('show');
 }
 
@@ -1822,13 +1848,13 @@ async function rebaixarParaDemo(profile, diasVencido) {
   try {
     await db.collection('usuarios').doc(user.uid).set({
       plano: 'demo',
-      limiteProdutos: 10,
+      limiteProdutos: 100,
       atualizadoEm: new Date().toISOString()
     }, { merge: true });
   } catch(e) { console.warn('Erro ao rebaixar plano:', e); }
 
   // Atualizar localmente
-  window._userProfile = { ...window._userProfile, plano: 'demo', limiteProdutos: 10 };
+  window._userProfile = { ...window._userProfile, plano: 'demo', limiteProdutos: 100 };
   updatePlanBadge();
 
   // Mostrar modal de assinatura vencida
